@@ -1,0 +1,79 @@
+{
+  "name": "feeddrive",
+  "version": "0.0.1",
+  "author": "NeteruStar",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --port 8100",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "lint": "npm run eslint && npm run typecheck:e2e && npm run prettier -- --check",
+    "lint:fix": "npm run eslint -- --fix && npm run prettier -- --write",
+    "eslint": "ng lint --max-warnings 0",
+    "prettier": "prettier \"**/*.{ts,html}\"",
+    "typecheck:e2e": "tsc -p tsconfig.e2e.json",
+    "test": "ng test --no-watch",
+    "test:watch": "ng test --watch",
+    "test:coverage": "ng test --no-watch --coverage",
+    "e2e": "playwright test",
+    "prepare": "husky"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "22.2.3",
+    "@angular/compiler": "22.2.3",
+    "@angular/core": "22.2.3",
+    "@angular/forms": "22.2.3",
+    "@angular/platform-browser": "22.2.3",
+    "@angular/router": "22.2.3",
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/geolocation": "^8.2.4",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/keyboard": "8.0.6",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/status-bar": "8.0.4",
+    "@ionic/angular": "^9.0.0",
+    "ionicons": "^8.1.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "22.2.4",
+    "@angular/cli": "22.2.4",
+    "@angular/compiler-cli": "22.2.3",
+    "@angular/language-service": "22.2.3",
+    "@capacitor/cli": "8.6.0",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@ionic/angular-toolkit": "^13.0.0",
+    "@ionic/eslint-config": "^0.5.0",
+    "@ionic/prettier-config": "^4.0.0",
+    "@playwright/test": "^1.64.1",
+    "@testing-library/angular": "^19.6.0",
+    "@testing-library/dom": "^10.4.2",
+    "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "~5.0.5",
+    "angular-eslint": "22.6.0",
+    "eslint": "^10.10.0",
+    "husky": "^9.1.7",
+    "jsdom": "^30.1.1",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.0",
+    "typescript-eslint": "^8.61.0",
+    "vitest": "~5.0.5"
+  },
+  "prettier": "@ionic/prettier-config",
+  "description": "FeedDrive: plataforma de transporte (web y móvil) en Angular, Ionic y Capacitor",
+  "lint-staged": {
+    "*.{ts,html}": [
+      "eslint --fix --max-warnings 0",
+      "prettier --write"
+    ],
+    "*.{scss,json,md}": [
+      "prettier --write"
+    ]
+  }
+}
