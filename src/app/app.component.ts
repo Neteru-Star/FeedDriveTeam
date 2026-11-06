@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { ThemeService } from '@core/theme/theme.service';
 import { IonApp } from '@ionic/angular/ion-app';
 import { IonRouterOutlet } from '@ionic/angular/ion-router-outlet';
 
@@ -7,4 +8,8 @@ import { IonRouterOutlet } from '@ionic/angular/ion-router-outlet';
   templateUrl: 'app.component.html',
   imports: [IonApp, IonRouterOutlet],
 })
-export class AppComponent {}
+export class AppComponent {
+  constructor() {
+    inject(ThemeService).init();
+  }
+}

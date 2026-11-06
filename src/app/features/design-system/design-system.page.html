@@ -1,0 +1,144 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>Sistema de diseño · Ruta Viva</ion-title>
+    <ion-toggle slot="end" [checked]="theme.dark()" (ionChange)="theme.toggle()">Oscuro</ion-toggle>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="ds">
+    <section>
+      <h2>Paleta</h2>
+      <div class="swatches">
+        @for (s of swatches; track s.name) {
+        <div class="swatch">
+          <span class="chip" [style.background]="'var(' + s.token + ')'"></span>
+          <strong>{{ s.name }}</strong>
+          <code class="mono">{{ s.token }}</code>
+        </div>
+        }
+      </div>
+    </section>
+
+    <section>
+      <h2>Tipografía</h2>
+      <app-glass-card class="type">
+        <p class="display big">Bricolage Grotesque</p>
+        <p>Geist para texto e interfaz: claro, compacto y legible en pantallas pequeñas.</p>
+        <p class="mono">Geist Mono · 12,4 km · 18 min · $ 22.750</p>
+      </app-glass-card>
+    </section>
+
+    <section>
+      <h2>Botones</h2>
+      <div class="row">
+        <ion-button>Solicitar viaje</ion-button>
+        <ion-button fill="outline" color="dark">Programar</ion-button>
+        <ion-button fill="clear" color="dark">Cancelar</ion-button>
+        <ion-button color="danger">Cancelar viaje</ion-button>
+        <ion-button disabled>Deshabilitado</ion-button>
+      </div>
+    </section>
+
+    <section class="grid">
+      <app-glass-card>
+        <h3>Formulario</h3>
+        <form [formGroup]="form" (ngSubmit)="validate()">
+          <app-text-field
+            [control]="form.controls.email"
+            label="Correo electrónico"
+            type="email"
+            autocomplete="email"
+            inputmode="email"
+          />
+          <app-text-field
+            [control]="form.controls.password"
+            label="Contraseña"
+            type="password"
+            autocomplete="current-password"
+            helper="Mínimo 8 caracteres"
+          />
+          <ion-button type="submit" expand="block">Validar</ion-button>
+        </form>
+      </app-glass-card>
+
+      <app-glass-card>
+        <h3>Avisos y hoja inferior</h3>
+        <div class="stack">
+          <ion-button fill="outline" color="dark" (click)="toast.success('Cuenta creada. Ya puedes iniciar sesión.')">
+            Aviso de éxito
+          </ion-button>
+          <ion-button fill="outline" color="dark" (click)="toast.error('Correo o contraseña incorrectos')">
+            Aviso de error
+          </ion-button>
+          <ion-button fill="outline" color="dark" (click)="toast.info('Tu sesión vence en 2 minutos')">
+            Aviso informativo
+          </ion-button>
+          <ion-button (click)="sheetOpen.set(true)">Abrir hoja inferior</ion-button>
+        </div>
+      </app-glass-card>
+    </section>
+
+    <app-bottom-sheet [open]="sheetOpen()" (dismissed)="sheetOpen.set(false)">
+      <div class="stack sheet-body">
+        <h2>Confirma tu viaje</h2>
+        <app-route-line origin="Cra. 7 # 45-10" destination="Aeropuerto El Dorado" />
+        <app-fare-display [total]="24800" />
+        <ion-button expand="block" (click)="sheetOpen.set(false)">Solicitar viaje</ion-button>
+      </div>
+    </app-bottom-sheet>
+
+    <section>
+      <h2>Estados del viaje</h2>
+      <div class="row">
+        @for (s of statuses; track s) {
+        <app-status-pill [status]="s" />
+        }
+      </div>
+    </section>
+
+    <section class="grid">
+      <app-glass-card>
+        <h3>Tarifa</h3>
+        <app-fare-display [total]="22750" [surge]="1.3" [breakdown]="breakdown" />
+      </app-glass-card>
+
+      <app-glass-card class="driver">
+        <h3>Conductor</h3>
+        <div class="driver-row">
+          <div class="avatar">CM</div>
+          <div>
+            <strong>Carlos Méndez</strong>
+            <p>Chevrolet Spark · Gris</p>
+            <app-rating-stars [value]="5" [readonly]="true" />
+          </div>
+        </div>
+        <app-plate value="KXT482" city="Bogotá" />
+      </app-glass-card>
+
+      <app-glass-card>
+        <h3>Ruta viva</h3>
+        <app-route-line origin="Cra. 7 # 40-62" destination="Av. El Dorado # 68-51" />
+      </app-glass-card>
+
+      <app-glass-card>
+        <h3>Califica tu viaje</h3>
+        <app-rating-stars [(value)]="rating" />
+        <p class="hint">Seleccionado: {{ rating() }} de 5</p>
+      </app-glass-card>
+
+      <app-glass-card>
+        <h3>Cargando</h3>
+        <ion-skeleton-text [animated]="true" style="width: 60%" />
+        <ion-skeleton-text [animated]="true" style="width: 90%" />
+        <ion-skeleton-text [animated]="true" style="width: 40%" />
+      </app-glass-card>
+
+      <app-glass-card>
+        <app-empty-state title="Aún no tienes viajes" message="Cuando pidas tu primer viaje, aparecerá aquí.">
+          <ion-button size="small">Pedir un viaje</ion-button>
+        </app-empty-state>
+      </app-glass-card>
+    </section>
+  </main>
+</ion-content>

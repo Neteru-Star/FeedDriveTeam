@@ -34,4 +34,90 @@
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+@import '@ionic/angular/css/palettes/dark.class.css';
+
+/* Tipografía local: funciona sin red en el dispositivo */
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '@fontsource-variable/bricolage-grotesque';
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+ion-button {
+  --border-radius: var(--radius-control);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+ion-skeleton-text {
+  --background-rgb: var(--ion-color-primary-rgb);
+}
+
+/* Campos de formulario */
+ion-input[fill='solid'] {
+  --background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+  --border-radius: var(--radius-control);
+  --border-width: 0;
+  --highlight-color-focused: var(--color-primary-strong);
+  --highlight-color-invalid: var(--color-danger);
+  --padding-start: 14px;
+  --padding-end: 14px;
+  margin-bottom: 12px;
+}
+
+/* Avisos (ToastService) */
+ion-toast.app-toast {
+  --border-radius: 16px;
+  --box-shadow: var(--shadow-float);
+  --button-color: currentColor;
+  font-weight: 600;
+}
+
+ion-toast.app-toast::part(button) {
+  text-transform: none;
+  font-weight: 700;
+}
+
+ion-toast.app-toast--success {
+  --background: var(--color-primary);
+  --color: #0f1a14;
+}
+
+ion-toast.app-toast--error {
+  --background: var(--color-danger);
+  --color: #ffffff;
+}
+
+ion-toast.app-toast--info {
+  --background: var(--color-ink);
+  --color: var(--color-surface);
+}
+
+/* Hoja inferior (app-bottom-sheet) */
+ion-modal.app-sheet {
+  --border-radius: var(--radius-sheet);
+  --background: var(--color-card);
+  --box-shadow: var(--shadow-float);
+  --backdrop-opacity: 0.25;
+}
+
+ion-modal.app-sheet ion-content {
+  --background: transparent;
+}
+
+ion-modal.app-sheet::part(content) {
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+}

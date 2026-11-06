@@ -1,2 +1,89 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+// Tokens de diseño "Ruta Viva". Fuente única de color, radio, sombra y tipografía.
+// Las variables propias (--color-*) se mapean al theming de Ionic (--ion-*).
+
+:root {
+  // Paleta base
+  --color-primary: #a6f28b;
+  --color-primary-strong: #6fd957;
+  --color-primary-soft: #e9fbe2;
+  --color-ink: #0f1a14;
+  --color-surface: #f5f7f2;
+  --color-card: rgba(255, 255, 255, 0.72);
+  --color-card-border: rgba(15, 26, 20, 0.08);
+  --color-muted: #6b7a70;
+  --color-danger: #e5484d;
+  --color-warning: #f5a524;
+  --color-info: #3e8ef7;
+  --color-violet: #8b5cf6;
+
+  // Forma y profundidad
+  --radius-sheet: 28px;
+  --radius-card: 20px;
+  --radius-control: 14px;
+  --shadow-float: 0 12px 40px rgba(15, 26, 20, 0.12);
+  --blur-glass: blur(18px) saturate(1.4);
+  --motion-fast: 150ms;
+  --motion-base: 250ms;
+
+  // Tipografía
+  --font-display: 'Bricolage Grotesque Variable', 'Segoe UI', sans-serif;
+  --font-ui: 'Geist Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+
+  // Mapeo a Ionic
+  --ion-font-family: var(--font-ui);
+  --ion-background-color: var(--color-surface);
+  --ion-background-color-rgb: 245, 247, 242;
+  --ion-text-color: var(--color-ink);
+  --ion-text-color-rgb: 15, 26, 20;
+
+  --ion-color-primary: #a6f28b;
+  --ion-color-primary-rgb: 166, 242, 139;
+  --ion-color-primary-contrast: #0f1a14;
+  --ion-color-primary-contrast-rgb: 15, 26, 20;
+  --ion-color-primary-shade: #6fd957;
+  --ion-color-primary-tint: #b0f397;
+
+  --ion-color-dark: #0f1a14;
+  --ion-color-dark-rgb: 15, 26, 20;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #0d1712;
+  --ion-color-dark-tint: #27312c;
+
+  --ion-color-danger: #e5484d;
+  --ion-color-danger-rgb: 229, 72, 77;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #ca3f44;
+  --ion-color-danger-tint: #e85a5f;
+
+  --ion-color-warning: #f5a524;
+  --ion-color-warning-rgb: 245, 165, 36;
+  --ion-color-warning-contrast: #0f1a14;
+  --ion-color-warning-contrast-rgb: 15, 26, 20;
+  --ion-color-warning-shade: #d89120;
+  --ion-color-warning-tint: #f6ae3a;
+}
+
+:root.ion-palette-dark {
+  --color-primary-soft: rgba(166, 242, 139, 0.12);
+  --color-ink: #e8f2ea;
+  --color-surface: #0b120e;
+  --color-card: rgba(22, 34, 27, 0.72);
+  --color-card-border: rgba(232, 242, 234, 0.08);
+  --color-muted: #8fa096;
+  --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.45);
+
+  --ion-background-color: #0b120e;
+  --ion-background-color-rgb: 11, 18, 14;
+  --ion-text-color: #e8f2ea;
+  --ion-text-color-rgb: 232, 242, 234;
+
+  --ion-color-dark: #e8f2ea;
+  --ion-color-dark-rgb: 232, 242, 234;
+  --ion-color-dark-contrast: #0f1a14;
+  --ion-color-dark-contrast-rgb: 15, 26, 20;
+  --ion-color-dark-shade: #ccd5ce;
+  --ion-color-dark-tint: #eaf3ec;
+}
