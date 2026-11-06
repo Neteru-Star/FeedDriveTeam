@@ -9,6 +9,9 @@ export function fieldErrorMessage(errors: ValidationErrors | null): string {
   if (typeof errors[SERVER_ERROR] === 'string') return errors[SERVER_ERROR];
   if (errors['required']) return 'Este campo es obligatorio.';
   if (errors['email']) return 'Ingresa un correo válido.';
+  if (errors['phone']) return 'Ingresa un celular de 10 dígitos que empiece por 3.';
+  if (errors['plate']) return 'Ingresa una placa válida, por ejemplo KZT-482.';
+  if (errors['mismatch']) return 'Las contraseñas no coinciden.';
   if (errors['minlength']) return `Debe tener al menos ${errors['minlength'].requiredLength} caracteres.`;
   if (errors['maxlength']) return `No debe superar ${errors['maxlength'].requiredLength} caracteres.`;
   if (errors['min']) return `El valor mínimo es ${errors['min'].min}.`;

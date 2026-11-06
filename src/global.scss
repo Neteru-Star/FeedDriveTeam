@@ -121,3 +121,35 @@ ion-modal.app-sheet::part(content) {
   backdrop-filter: var(--blur-glass);
   -webkit-backdrop-filter: var(--blur-glass);
 }
+
+/* Mensajes dentro de formularios y paneles */
+.app-banner {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.app-banner--success {
+  background: var(--color-primary-soft);
+  color: color-mix(in srgb, var(--color-primary-strong) 55%, var(--color-ink));
+}
+
+.app-banner--error {
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  color: var(--color-danger);
+}
+
+.app-link {
+  color: var(--color-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--color-primary-strong);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.app-muted {
+  color: var(--color-muted);
+}

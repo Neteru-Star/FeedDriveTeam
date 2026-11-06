@@ -1,7 +1,7 @@
 import { registerLocaleData } from '@angular/common';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import localeEsCo from '@angular/common/locales/es-CO';
-import { DEFAULT_CURRENCY_CODE, LOCALE_ID, type ApplicationConfig } from '@angular/core';
+import { DEFAULT_CURRENCY_CODE, LOCALE_ID, inject, provideAppInitializer, type ApplicationConfig } from '@angular/core';
 import {
   PreloadAllModules,
   RouteReuseStrategy,
@@ -14,7 +14,9 @@ import { IonicRouteStrategy } from '@ionic/angular/ionic-route-strategy';
 import { provideIonicAngular } from '@ionic/angular/provide';
 
 import { routes } from './app.routes';
+import { AuthStore } from './core/auth/auth.store';
 import { APP_CONFIG } from './core/config/app-config';
+import { authInterceptor, errorInterceptor } from './core/http/interceptors';
 
 // Números, fechas y moneda en formato colombiano: $ 22.750
 registerLocaleData(localeEsCo);
@@ -27,6 +29,8 @@ export const appConfig: ApplicationConfig = {
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
+    // La sesión guardada se recupera antes de la primera navegación, para que los guards la vean.
+    provideAppInitializer(() => inject(AuthStore).restore()),
   ],
 };

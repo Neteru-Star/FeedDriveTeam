@@ -60,17 +60,17 @@ Con `npm run mock:api:auto`, Carlos se vuelve un conductor automático: acepta c
 
 ## Scripts
 
-| Comando                 | Uso                                |
-| ----------------------- | ---------------------------------- |
-| `npm start`             | Servidor de desarrollo             |
-| `npm run start:mock`    | Servidor de desarrollo con el mock |
-| `npm run mock:api`      | Backend simulado                   |
-| `npm run mock:test`     | Prueba del backend simulado        |
-| `npm run build`         | Build de producción en `www/`      |
-| `npm run lint`          | ESLint, tipos de E2E y Prettier    |
-| `npm test`              | Pruebas unitarias                  |
-| `npm run test:coverage` | Pruebas unitarias con cobertura    |
-| `npm run e2e`           | Pruebas E2E en móvil y escritorio  |
+| Comando                 | Uso                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------- |
+| `npm start`             | Servidor de desarrollo                                                                      |
+| `npm run start:mock`    | Servidor de desarrollo con el mock                                                          |
+| `npm run mock:api`      | Backend simulado                                                                            |
+| `npm run mock:test`     | Prueba del backend simulado                                                                 |
+| `npm run build`         | Build de producción en `www/`                                                               |
+| `npm run lint`          | ESLint, tipos de E2E y Prettier                                                             |
+| `npm test`              | Pruebas unitarias                                                                           |
+| `npm run test:coverage` | Pruebas unitarias con cobertura                                                             |
+| `npm run e2e`           | Pruebas E2E en móvil y escritorio, contra el mock (levanta la API en 8000 y la app en 4300) |
 
 ## Decisiones
 

@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = 'http://localhost:8100';
+// Las pruebas E2E corren contra el backend simulado (mock-api) y la app en configuración "mock",
+// en un puerto propio para no reutilizar un `npm start` que apunte al servidor real.
+const baseURL = 'http://localhost:4300';
 
 export default defineConfig({
   testDir: './e2e',
@@ -22,10 +24,18 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
   ],
-  webServer: {
-    command: 'npm start',
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command: 'npm run mock:api',
+      url: 'http://localhost:8000/api/fares/active',
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+    {
+      command: 'npx ng serve --configuration mock --port 4300',
+      url: baseURL,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });

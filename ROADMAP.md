@@ -5,10 +5,10 @@
 | Fase | Nombre                                  | Estado                                          |
 | ---- | --------------------------------------- | ----------------------------------------------- |
 | 0    | Cimientos del proyecto                  | Lista: APK compila, falta abrir en dispositivo  |
-| 1    | Sistema de diseño                       | Lista: falta el visto bueno de diseño           |
+| 1    | Sistema de diseño                       | Lista y aprobada                                |
 | —    | Backend simulado (`mock-api/`)          | Listo: 40 verificaciones en `npm run mock:test` |
-| 2    | Capa de API y autenticación             | Siguiente                                       |
-| 3    | Shell de la aplicación y mapa           | Pendiente                                       |
+| 2    | Capa de API y autenticación (HU-01)     | Lista: 42 unitarias y 22 E2E                    |
+| 3    | Shell de la aplicación y mapa           | Siguiente                                       |
 | 4    | Cliente: estimar y solicitar viaje      | Pendiente                                       |
 | 5    | Cliente: viaje activo en tiempo real    | Pendiente                                       |
 | 6    | Cliente: historial y calificación       | Pendiente                                       |
@@ -31,7 +31,7 @@
 
 - Instalar una imagen de sistema para el emulador: los AVD apuntan a `android-35`, que no está en el SDK.
 - Conseguir las credenciales de administrador del backend real: sin ellas ningún conductor puede aprobarse. En el mock existen (`README.md`).
-- `Validators.email` de Angular acepta correos sin dominio (`laura@correo`): usar un patrón más estricto en el registro (Fase 2).
+- La pantalla del conductor no muestra aún si su cuenta está pendiente de aprobación: el backend solo lo informa al cambiar la disponibilidad (403 con `approval_status`), así que se resuelve en la Fase 7.
 
 ## Brechas del backend (resueltas en el frontend)
 
