@@ -5,6 +5,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 8100",
+    "start:mock": "ng serve --port 8100 --configuration mock",
+    "mock:api": "node mock-api/server.mjs",
+    "mock:api:auto": "node mock-api/server.mjs --autopilot",
+    "mock:test": "node mock-api/smoke-test.mjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "lint": "npm run eslint && npm run typecheck:e2e && npm run prettier -- --check",
