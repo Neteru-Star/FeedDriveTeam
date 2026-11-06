@@ -1,4 +1,4 @@
-import { BOGOTA, bearing, curvedRoute, formatDistance, haversineKm, isSamePlace } from './geo';
+import { BOGOTA, bearing, curvedRoute, etaMinutes, formatDistance, haversineKm, isSamePlace } from './geo';
 
 const PARQUE_93 = { lat: 4.6766, lng: -74.0483 };
 const ANDINO = { lat: 4.6664, lng: -74.0536 };
@@ -39,5 +39,13 @@ describe('geo utils', () => {
   it('formats distances in Spanish', () => {
     expect(formatDistance(0.85)).toBe('850 m');
     expect(formatDistance(12.43)).toBe('12,4 km');
+  });
+
+  it('estimates city travel time with a detour factor, never below one minute', () => {
+    const parque93 = { lat: 4.6766, lng: -74.0483 };
+    const unicentro = { lat: 4.7024, lng: -74.0412 };
+    // ~2,97 km en línea recta × 1,3 a 22 km/h ≈ 11 min
+    expect(etaMinutes(parque93, unicentro)).toBe(11);
+    expect(etaMinutes(parque93, parque93)).toBe(1);
   });
 });

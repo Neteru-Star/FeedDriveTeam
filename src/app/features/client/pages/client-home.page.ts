@@ -11,6 +11,7 @@ import {
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Geocoder, type Place } from '@core/geo/geocoder';
 import { LocationService } from '@core/location/location.service';
+import { ActionSheetController } from '@ionic/angular/action-sheet-controller';
 import { AlertController } from '@ionic/angular/alert-controller';
 import { IonButton } from '@ionic/angular/ion-button';
 import { IonIcon } from '@ionic/angular/ion-icon';
@@ -27,7 +28,7 @@ import { catchError, debounceTime, filter, of, switchMap } from 'rxjs';
 import { FareConfirmComponent } from '../components/fare-confirm.component';
 import { PlaceSearchComponent } from '../components/place-search.component';
 import { RideStatusComponent } from '../components/ride-status.component';
-import { ActiveRideStore } from '../data-access/active-ride.store';
+import { ActiveRideStore, CANCEL_REASON_MAX } from '../data-access/active-ride.store';
 import type { RideRequest, RideRequestPayload } from '../data-access/client.models';
 import { FareQuoteStore } from '../data-access/fare-quote.store';
 import { TripDraftStore, type PointKind } from '../data-access/trip-draft.store';
@@ -37,6 +38,9 @@ const CURRENT_LOCATION = 'Mi ubicación actual';
 const WIDE_SCREEN_PX = 900;
 const REVERSE_DEBOUNCE_MS = 500;
 const SAME_PLACE_ERROR = 'El origen y el destino no pueden ser el mismo lugar.';
+const SEARCH_CANCEL_REASONS = ['Cambié de planes', 'Pedí el viaje por error', 'Tarda mucho en encontrar conductor'];
+const TRIP_CANCEL_REASONS = ['Cambié de planes', 'El conductor tarda demasiado', 'Encontré otro transporte'];
+const OTHER_REASON = 'Otro motivo';
 
 const requestRoute = (r: RideRequest): MapRoute => ({
   from: { lat: r.origin_latitude, lng: r.origin_longitude },
@@ -73,6 +77,7 @@ export class ClientHomePage {
   private readonly geocoder = inject(Geocoder);
   private readonly toast = inject(ToastService);
   private readonly alerts = inject(AlertController);
+  private readonly actionSheets = inject(ActionSheetController);
   private readonly map = viewChild.required(MapComponent);
 
   protected readonly center = signal<LatLng>(BOGOTA);
@@ -167,7 +172,7 @@ export class ClientHomePage {
     let previous = this.ride.state().kind;
     effect(() => {
       const kind = this.ride.state().kind;
-      if (previous === 'trip' && kind === 'idle') {
+      if ((previous === 'trip' || previous === 'ended') && kind === 'idle') {
         untracked(() => {
           this.draft.clear('destination');
           this.step.set('plan');
@@ -307,5 +312,46 @@ export class ClientHomePage {
       ],
     });
     await alert.present();
+  }
+
+  /** HU-06: cancelar con motivo, solo mientras se busca conductor o antes de iniciar el recorrido. */
+  protected async askCancelReason(): Promise<void> {
+    const searching = this.ride.state().kind === 'searching';
+    const sheet = await this.actionSheets.create({
+      header: searching ? '¿Por qué cancelas la solicitud?' : '¿Por qué cancelas el viaje?',
+      subHeader: searching ? undefined : 'Tu conductor ya va en camino.',
+      buttons: [
+        ...(searching ? SEARCH_CANCEL_REASONS : TRIP_CANCEL_REASONS).map((text) => ({ text, data: text })),
+        { text: OTHER_REASON, data: OTHER_REASON },
+        { text: 'No cancelar', role: 'cancel' },
+      ],
+    });
+    await sheet.present();
+    const { data, role } = await sheet.onDidDismiss<string>();
+    if (role === 'cancel' || role === 'backdrop' || !data) return;
+    const reason = data === OTHER_REASON ? await this.askOtherReason(searching) : data;
+    if (reason) await this.ride.cancel(reason);
+  }
+
+  private async askOtherReason(searching: boolean): Promise<string | null> {
+    const alert = await this.alerts.create({
+      header: 'Cuéntanos el motivo',
+      inputs: [
+        {
+          name: 'reason',
+          type: 'textarea',
+          placeholder: 'Escribe el motivo (opcional)',
+          attributes: { maxlength: CANCEL_REASON_MAX, 'aria-label': 'Motivo de la cancelación' },
+        },
+      ],
+      buttons: [
+        { text: 'Volver', role: 'cancel' },
+        { text: searching ? 'Cancelar solicitud' : 'Cancelar viaje', role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    const { data, role } = await alert.onDidDismiss<{ values?: { reason?: string } }>();
+    if (role !== 'confirm') return null;
+    return data?.values?.reason?.trim() || OTHER_REASON;
   }
 }

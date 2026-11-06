@@ -35,7 +35,8 @@
   } @if (rideActive()) {
   <app-ride-status
     [state]="ride.state()"
-    (cancelSearch)="ride.cancelSearch()"
+    [cancellable]="ride.cancellable()"
+    (cancelRide)="askCancelReason()"
     (retry)="retryRide()"
     (dismiss)="ride.dismiss()"
   />

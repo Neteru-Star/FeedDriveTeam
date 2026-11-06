@@ -10,8 +10,8 @@
 | 2    | Capa de API y autenticación (HU-01)        | Lista: 42 unitarias y 22 E2E                    |
 | 3    | Shell de la aplicación y mapa (HU-02)      | Lista: 72 unitarias y 38 E2E                    |
 | 4    | Cliente: estimar y solicitar viaje (HU-03) | Lista: 91 unitarias y 48 E2E                    |
-| 5    | Cliente: viaje activo en tiempo real       | Siguiente                                       |
-| 6    | Cliente: historial y calificación          | Pendiente                                       |
+| 5    | Cliente: viaje activo en tiempo real       | Lista: 109 unitarias y 54 E2E                   |
+| 6    | Cliente: historial y calificación          | Siguiente                                       |
 | 7    | Conductor: disponibilidad y solicitudes    | Pendiente                                       |
 | 8    | Conductor: ejecución del viaje             | Pendiente                                       |
 | 9    | Admin: dashboard, conductores y tarifas    | Pendiente                                       |
@@ -23,6 +23,7 @@
 
 - Notificaciones push o sonido al recibir una solicitud (conductor)
 - Seguimiento GPS en segundo plano para el conductor
+- Rutas por calles reales (OSRM u otro servicio) para el trazado y el tiempo estimado
 - Lugares favoritos en el cliente
 - Compartir viaje en curso con un enlace
 - Internacionalización EN
@@ -45,4 +46,7 @@ Detalle en la Tabla 12 de `UberTeam_Historias_y_Mockups_APA.docx`.
 - `forgot-password` cambia la clave solo con el correo: riesgo de seguridad a informar.
 - El viaje asignado de `/client/active` no trae origen ni destino: la solicitud se guarda en el teléfono (`ActiveRideStorage`) para seguir dibujando la ruta.
 - El backend no vence las solicitudes sin conductor: el frontend las cancela a los 2 minutos.
+- `/client/active` no dice cómo terminó un viaje: al desaparecer se busca en `/client/trips` (estado y tarifa final); sin historial se deduce por el último estado.
+- `POST /client/cancel/{id}` no aclara si el id es del viaje o de la solicitud: se usa el `id` de `/client/active` y, ante un 404, el de la solicitud.
+- No hay tiempo estimado de llegada ni rutas: se calcula con Haversine × 1,3 a 22 km/h.
 - `/auth/me` no trae el perfil del conductor (placa, calificación, aprobación): la tarjeta del conductor muestra solo su nombre por ahora.

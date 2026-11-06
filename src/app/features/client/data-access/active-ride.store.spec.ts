@@ -6,7 +6,7 @@ import { ToastService } from '@shared/ui/toast/toast.service';
 import { ActiveRideStorage } from './active-ride.storage';
 import { ActiveRideStore, SEARCH_TIMEOUT_MS } from './active-ride.store';
 import { ClientApi } from './client.api';
-import type { ActiveTrip, ClientActive, RideRequest } from './client.models';
+import type { ActiveTrip, ClientActive, RideRequest, TripSummary } from './client.models';
 
 const POLL_MS = 5000;
 const payload = {
@@ -49,6 +49,9 @@ class FakeApi {
   active: ClientActive = { has_active: false };
   requestError: ApiError | null = null;
   cancelError: ApiError | null = null;
+  history: TripSummary[] = [];
+  /** Ids que el backend no reconoce al cancelar (404). */
+  unknownIds: number[] = [];
   readonly cancelled: { id: number; reason: string }[] = [];
 
   requestRide = async (): Promise<RideRequest> => {
@@ -59,7 +62,9 @@ class FakeApi {
   activeFare = async () => ({});
   estimate = async () => ({});
   getActive = async (): Promise<ClientActive> => this.active;
+  trips = async (): Promise<TripSummary[]> => this.history;
   cancel = async (id: number, reason: string): Promise<unknown> => {
+    if (this.unknownIds.includes(id)) throw new ApiError(404, 'Solicitud no encontrada.');
     if (this.cancelError) throw this.cancelError;
     this.cancelled.push({ id, reason });
     this.active = { has_active: false };
@@ -178,7 +183,38 @@ describe('ActiveRideStore', () => {
     expect(store.request()?.destination_name).toBe('Andino');
   });
 
-  it('returns to planning and announces it when the trip ends', async () => {
+  it('follows the whole trip by polling until it shows the final fare', async () => {
+    saved = request;
+    api.active = { has_active: true, type: 'trip', data: trip };
+    const store = setup();
+    await store.restore();
+    const seen: string[] = [];
+    const step = async (status: ActiveTrip['status']): Promise<void> => {
+      api.active = { has_active: true, type: 'trip', data: { ...trip, status } };
+      await vi.advanceTimersByTimeAsync(POLL_MS);
+      const state = store.state();
+      if (state.kind === 'trip') seen.push(state.trip.status);
+    };
+
+    await step('driver_arrived');
+    await step('in_progress');
+    api.history = [{ id: 3, status: 'completed', final_fare: 7200 }];
+    api.active = { has_active: false };
+    await vi.advanceTimersByTimeAsync(POLL_MS);
+
+    expect(seen).toEqual(['driver_arrived', 'in_progress']);
+    expect(store.state()).toEqual(
+      expect.objectContaining({ kind: 'ended', outcome: 'completed', finalFare: 7200, request }),
+    );
+    expect(saved).toBeNull();
+    // Terminado, ya no se consulta más.
+    api.active = { has_active: true, type: 'trip', data: trip };
+    await vi.advanceTimersByTimeAsync(POLL_MS * 2);
+    expect(store.state().kind).toBe('ended');
+  });
+
+  it('deduces how the trip ended when the history is not available', async () => {
+    api.trips = () => Promise.reject(new ApiError(0, 'offline'));
     api.active = { has_active: true, type: 'trip', data: trip };
     const store = setup();
     await store.restore();
@@ -186,17 +222,86 @@ describe('ActiveRideStore', () => {
     api.active = { has_active: false };
     await vi.advanceTimersByTimeAsync(POLL_MS);
 
-    expect(store.state().kind).toBe('idle');
-    expect(toast.success).toHaveBeenCalledWith('Tu viaje terminó.');
+    // Aún no había iniciado el recorrido: lo cancelaron.
+    expect(store.state()).toEqual(expect.objectContaining({ kind: 'ended', outcome: 'cancelled', finalFare: null }));
   });
 
-  it('lets the passenger cancel while searching', async () => {
+  it('ignores a late response that would move the trip backwards', async () => {
+    api.active = { has_active: true, type: 'trip', data: { ...trip, status: 'in_progress' } };
+    const store = setup();
+    await store.restore();
+
+    api.active = { has_active: true, type: 'trip', data: trip };
+    await vi.advanceTimersByTimeAsync(POLL_MS);
+
+    const state = store.state();
+    expect(state.kind === 'trip' && state.trip.status).toBe('in_progress');
+  });
+
+  it('lets the passenger cancel while searching, with a reason', async () => {
     const store = setup();
     await store.requestRide(payload);
 
-    await store.cancelSearch();
+    expect(await store.cancel('Cambié de planes')).toBe(true);
 
     expect(store.state().kind).toBe('idle');
-    expect(api.cancelled).toEqual([{ id: 7, reason: 'Cancelado por el pasajero' }]);
+    expect(api.cancelled).toEqual([{ id: 7, reason: 'Cambié de planes' }]);
+    expect(toast.info).toHaveBeenCalledWith('Cancelaste la solicitud.');
+  });
+
+  it('cancels an assigned trip with its id, or the request id if the backend does not know it', async () => {
+    saved = request;
+    api.active = { has_active: true, type: 'trip', data: trip };
+    api.unknownIds = [3];
+    const store = setup();
+    await store.restore();
+
+    expect(store.cancellable()).toBe(true);
+    expect(await store.cancel('  El conductor tarda demasiado  ')).toBe(true);
+
+    expect(api.cancelled).toEqual([{ id: 7, reason: 'El conductor tarda demasiado' }]);
+    expect(store.state().kind).toBe('idle');
+    expect(saved).toBeNull();
+  });
+
+  it('does not offer to cancel once the ride has started', async () => {
+    api.active = { has_active: true, type: 'trip', data: { ...trip, status: 'in_progress' } };
+    const store = setup();
+    await store.restore();
+
+    expect(store.cancellable()).toBe(false);
+    expect(await store.cancel('Cambié de planes')).toBe(false);
+    expect(api.cancelled).toEqual([]);
+  });
+
+  it('shows the real status when the backend refuses the cancellation', async () => {
+    api.active = { has_active: true, type: 'trip', data: trip };
+    api.cancelError = new ApiError(400, 'No es posible cancelar un viaje que ya inició su recorrido.');
+    const store = setup();
+    await store.restore();
+    api.active = { has_active: true, type: 'trip', data: { ...trip, status: 'in_progress' } };
+
+    expect(await store.cancel('Cambié de planes')).toBe(false);
+
+    expect(toast.error).toHaveBeenCalledWith('No es posible cancelar un viaje que ya inició su recorrido.');
+    const state = store.state();
+    expect(state.kind === 'trip' && state.trip.status).toBe('in_progress');
+    // Sigue consultando el viaje.
+    api.history = [{ id: 3, status: 'completed', final_fare: 6500 }];
+    api.active = { has_active: false };
+    await vi.advanceTimersByTimeAsync(POLL_MS);
+    expect(store.state().kind).toBe('ended');
+  });
+
+  it('closes the summary of an ended trip', async () => {
+    api.active = { has_active: true, type: 'trip', data: trip };
+    const store = setup();
+    await store.restore();
+    api.active = { has_active: false };
+    await vi.advanceTimersByTimeAsync(POLL_MS);
+
+    await store.dismiss();
+
+    expect(store.state().kind).toBe('idle');
   });
 });

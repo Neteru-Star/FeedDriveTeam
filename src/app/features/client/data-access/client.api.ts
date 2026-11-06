@@ -3,7 +3,15 @@ import { Injectable, inject } from '@angular/core';
 import { APP_CONFIG } from '@core/config/app-config';
 import { firstValueFrom, map } from 'rxjs';
 
-import type { ClientActive, Fare, FareEstimate, RideRequest, RideRequestPayload, RouteCoords } from './client.models';
+import type {
+  ClientActive,
+  Fare,
+  FareEstimate,
+  RideRequest,
+  RideRequestPayload,
+  RouteCoords,
+  TripSummary,
+} from './client.models';
 
 /** Endpoints del pasajero (`/api/client`) y la tarifa pública. Adapta las respuestas `{ success, ... }` a modelos. */
 @Injectable({ providedIn: 'root' })
@@ -33,6 +41,15 @@ export class ClientApi {
 
   active(): Promise<ClientActive> {
     return firstValueFrom(this.http.get<ClientActive>(`${this.base}/client/active`));
+  }
+
+  /** Una página del historial, del viaje más reciente al más antiguo. */
+  trips(page = 1): Promise<TripSummary[]> {
+    return firstValueFrom(
+      this.http
+        .get<{ trips: { data: TripSummary[] } }>(`${this.base}/client/trips`, { params: { page } })
+        .pipe(map((r) => r.trips.data)),
+    );
   }
 
   /** Cancela la solicitud o el viaje antes de iniciar el recorrido. */

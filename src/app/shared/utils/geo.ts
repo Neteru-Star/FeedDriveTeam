@@ -58,3 +58,14 @@ export function formatDistance(km: number): string {
   if (km < 1) return `${Math.round(km * 1000)} m`;
   return `${km.toLocaleString('es-CO', { maximumFractionDigits: 1 })} km`;
 }
+
+/** Velocidad media urbana usada para estimar tiempos sin un servicio de rutas (Bogotá, hora normal). */
+export const CITY_SPEED_KMH = 22;
+/** Las calles no van en línea recta: factor de rodeo sobre la distancia de Haversine. */
+export const DETOUR_FACTOR = 1.3;
+
+/** Minutos aproximados para recorrer de `a` a `b` en la ciudad (mínimo 1). */
+export function etaMinutes(a: LatLng, b: LatLng): number {
+  const km = haversineKm(a, b) * DETOUR_FACTOR;
+  return Math.max(1, Math.round((km / CITY_SPEED_KMH) * 60));
+}

@@ -69,3 +69,13 @@ export type ClientActive =
   | { has_active: false }
   | { has_active: true; type: 'request'; data: RideRequest }
   | { has_active: true; type: 'trip'; data: ActiveTrip };
+
+/** Viaje del historial (`GET /client/trips`): solo los campos que usa la app. */
+export interface TripSummary {
+  id: number;
+  status: TripStatus;
+  final_fare: number | null;
+  estimated_fare?: number;
+  completed_at?: string | null;
+  cancel_reason?: string | null;
+}

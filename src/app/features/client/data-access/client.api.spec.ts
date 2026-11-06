@@ -66,4 +66,13 @@ describe('ClientApi', () => {
     req.flush({ success: true });
     await cancel;
   });
+
+  it('reads a page of the trip history', async () => {
+    const trips = api.trips(2);
+    backend
+      .expectOne(`${API}/client/trips?page=2`)
+      .flush({ success: true, trips: { data: [{ id: 3, status: 'completed', final_fare: 9300 }] } });
+
+    expect(await trips).toEqual([{ id: 3, status: 'completed', final_fare: 9300 }]);
+  });
 });

@@ -1,8 +1,11 @@
 import { addIcons } from 'ionicons';
 import {
   arrowBackOutline,
+  callOutline,
   carOutline,
   cashOutline,
+  checkmarkCircleOutline,
+  closeCircleOutline,
   documentTextOutline,
   gridOutline,
   listOutline,
@@ -24,8 +27,11 @@ import {
 export function registerAppIcons(): void {
   addIcons({
     'arrow-back-outline': arrowBackOutline,
+    'call-outline': callOutline,
     'car-outline': carOutline,
     'cash-outline': cashOutline,
+    'checkmark-circle-outline': checkmarkCircleOutline,
+    'close-circle-outline': closeCircleOutline,
     'document-text-outline': documentTextOutline,
     'grid-outline': gridOutline,
     'list-outline': listOutline,

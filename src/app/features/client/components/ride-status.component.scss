@@ -56,8 +56,71 @@ p {
   margin-top: 14px;
 }
 
-.trip-head {
-  margin: 6px 0 14px;
+.timeline {
+  display: block;
+  margin: 4px 0 18px;
+}
+
+h2 {
+  margin: 0 0 4px;
+}
+
+.badge-icon.done {
+  color: var(--color-primary-strong);
+  background: var(--color-primary-soft);
+}
+
+.badge-icon.cancelled {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+}
+
+.total {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 0 0 18px;
+  padding: 14px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+
+  span {
+    font-size: 13px;
+    color: var(--color-muted);
+  }
+
+  strong {
+    font-size: 28px;
+  }
+
+  small {
+    font-size: 12px;
+  }
+}
+
+.side {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.call {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #0f1a14;
+  background: var(--color-primary);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
 }
 
 .driver {

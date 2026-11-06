@@ -1,5 +1,17 @@
 # Changelog
 
+## Fase 5: Viaje activo en tiempo real (HU-06)
+
+- Máquina de estados del viaje en `trip-status.ts`: textos del pasajero, mensajes, cancelación por rol, acción del conductor por estado y avances válidos.
+- Línea de tiempo "Buscando conductor → Conductor asignado → Tu conductor llegó → En camino → Finalizado".
+- Tiempo estimado de llegada del conductor al punto de partida y al destino, calculado desde su última posición.
+- El marcador del conductor se desliza entre posiciones y gira hacia donde se mueve (sin animación si el sistema pide reducir movimiento).
+- Botón "Llamar" con enlace `tel:` al conductor.
+- Cancelación con motivo (`ion-action-sheet` y texto libre con `ion-alert`), solo antes de iniciar el recorrido; si el backend la rechaza se muestra el estado real.
+- Resumen al terminar: tarifa final tomada del historial, o aviso de viaje cancelado.
+- Anuncios `aria-live` solo al cambiar de estado; las respuestas atrasadas no devuelven el viaje a un estado anterior.
+- Pruebas: máquina de estados, secuencia completa con reloj simulado, cancelación con 404 y 400, deslizamiento del marcador y E2E del viaje de punta a punta con un conductor real.
+
 ## Fase 4: Tarifa y solicitud del viaje (HU-03)
 
 - Tarifa estimada (`POST /client/estimate-fare`) con distancia, tiempo y precio, desglose en barras que siempre suma la tarifa oficial y chip de alta demanda según `GET /fares/active`.

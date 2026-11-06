@@ -59,7 +59,9 @@ test('shows the driver, plate and rating when a driver accepts', async ({ page, 
 
   await acceptRequest(request, driver.token, client.token);
 
-  await expect(page.getByText('Conductor asignado')).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('app-trip-timeline [aria-current="step"]')).toContainText('Conductor asignado', {
+    timeout: 10_000,
+  });
   await expect(page.getByText(driver.name)).toBeVisible();
   await expect(page.getByLabel(/^Placa /)).toBeVisible();
 });
@@ -72,6 +74,7 @@ test('offers to open the active trip instead of creating a second one', async ({
   await expect(page.getByRole('heading', { name: 'Buscando conductor…' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Cancelar solicitud' }).click();
+  await page.getByRole('button', { name: 'Cambié de planes' }).click();
   await expect(page.getByRole('heading', { name: '¿A dónde vas?' })).toBeVisible();
 
   // Mientras el pasajero confirma, otra solicitud aparece en el backend.

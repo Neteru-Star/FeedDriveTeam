@@ -32,7 +32,9 @@ export async function createAvailableDriver(
   request: APIRequestContext,
 ): Promise<{ token: string; name: string; plate: string }> {
   const { email, phone } = uniqueIdentity('conductor');
-  const plate = `T${String.fromCharCode(65 + (sequence % 26))}${String.fromCharCode(65 + (Number(phone.slice(-4, -3)) % 26))}${phone.slice(-3)}`;
+  // Placa aleatoria (17 millones de combinaciones): el backend simulado conserva las placas entre corridas.
+  const letter = () => String.fromCharCode(65 + Math.floor(Math.random() * 26));
+  const plate = `${letter()}${letter()}${letter()}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
   const name = 'Pedro Gómez';
   const res = await request.post(`${API}/auth/register`, {
     data: {
@@ -50,6 +52,7 @@ export async function createAvailableDriver(
       color: 'Blanco',
     },
   });
+  if (!res.ok()) throw new Error(`Registro del conductor: ${res.status()} ${await res.text()}`);
   const driverId = (await res.json()).user.id;
   const admin = await apiLogin(request, USERS.admin.login, USERS.admin.password);
   const drivers = await (await request.get(`${API}/admin/drivers`, { headers: auth(admin) })).json();
@@ -63,14 +66,38 @@ export async function createAvailableDriver(
   return { token, name, plate };
 }
 
-/** El conductor acepta la solicitud pendiente del pasajero (por su id). */
+/** El conductor acepta la solicitud pendiente del pasajero (por su id). Devuelve el id del viaje. */
 export async function acceptRequest(
   request: APIRequestContext,
   driverToken: string,
   clientToken: string,
-): Promise<void> {
+): Promise<number> {
   const active = await (await request.get(`${API}/client/active`, { headers: auth(clientToken) })).json();
-  await request.post(`${API}/driver/ride-requests/${active.data.id}/accept`, { headers: auth(driverToken) });
+  const res = await request.post(`${API}/driver/ride-requests/${active.data.id}/accept`, {
+    headers: auth(driverToken),
+  });
+  return (await res.json()).trip.id;
+}
+
+/** El conductor avanza el viaje: llegó al punto, inició o finalizó (con distancia y tiempo reales). */
+export async function advanceTrip(
+  request: APIRequestContext,
+  driverToken: string,
+  tripId: number,
+  action: 'arrive' | 'start' | 'complete',
+): Promise<void> {
+  const data = action === 'complete' ? { actual_distance_km: 1.6, actual_duration_min: 6 } : undefined;
+  const res = await request.post(`${API}/driver/trips/${tripId}/${action}`, { headers: auth(driverToken), data });
+  if (!res.ok()) throw new Error(`${action}: ${res.status()} ${await res.text()}`);
+}
+
+/** El conductor reporta su posición GPS. */
+export async function reportLocation(
+  request: APIRequestContext,
+  driverToken: string,
+  position: { latitude: number; longitude: number },
+): Promise<void> {
+  await request.post(`${API}/driver/location`, { headers: auth(driverToken), data: position });
 }
 
 /** Crea una solicitud por la API, como si el pasajero la hubiera pedido desde otro dispositivo. */

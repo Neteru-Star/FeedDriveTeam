@@ -3,7 +3,7 @@ import { APP_CONFIG } from '@core/config/app-config';
 import { ThemeService } from '@core/theme/theme.service';
 import { render } from '@testing-library/angular';
 
-import { MapComponent } from './map.component';
+import { GLIDE_MS, MapComponent } from './map.component';
 import type { MapMarker } from './map.models';
 
 const tiles = {
@@ -50,6 +50,34 @@ describe('MapComponent', () => {
     view.fixture.detectChanges();
 
     expect(view.container.querySelectorAll('.fd-mk-driver')).toHaveLength(1);
+  });
+
+  it('glides the driver to its new position and turns it towards where it moves', async () => {
+    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
+    try {
+      const view = await setup({ markers: [{ id: 'driver', kind: 'driver', position: PARQUE_93 }] });
+      const element = view.container.querySelector<HTMLElement>('.leaflet-marker-icon')!;
+      // Leaflet ubica el marcador con transform o con left/top según el navegador: se compara el estilo completo.
+      const position = (): string => `${element.style.transform}|${element.style.left}|${element.style.top}`;
+      const before = position();
+
+      view.fixture.componentRef.setInput('markers', [{ id: 'driver', kind: 'driver', position: ANDINO }]);
+      view.fixture.detectChanges();
+      vi.advanceTimersByTime(GLIDE_MS / 2);
+      const halfway = position();
+      vi.advanceTimersByTime(GLIDE_MS);
+
+      expect(halfway).not.toBe(before);
+      expect(position()).not.toBe(halfway);
+      // Andino queda al sur-suroeste de Parque 93: rumbo entre 180° y 270°.
+      const heading = parseFloat(
+        element.querySelector<HTMLElement>('.fd-mk-driver')!.style.getPropertyValue('--heading'),
+      );
+      expect(heading).toBeGreaterThan(180);
+      expect(heading).toBeLessThan(270);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('draws the route line with its pulse', async () => {

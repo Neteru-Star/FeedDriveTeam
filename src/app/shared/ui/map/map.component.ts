@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { APP_CONFIG } from '@core/config/app-config';
 import { ThemeService } from '@core/theme/theme.service';
-import { BOGOTA, curvedRoute, type LatLng } from '@shared/utils/geo';
+import { BOGOTA, bearing, curvedRoute, haversineKm, type LatLng } from '@shared/utils/geo';
 import * as L from 'leaflet';
 
 import type { MapMarker, MapPadding, MapRoute } from './map.models';
@@ -27,6 +27,13 @@ const ICON_HTML: Record<MapMarker['kind'], string> = {
 };
 
 const ICON_SIZE: Record<MapMarker['kind'], number> = { user: 22, origin: 18, destination: 18, driver: 34 };
+
+/** Duración del deslizamiento del conductor entre dos posiciones reportadas. */
+export const GLIDE_MS = 1200;
+/** Movimientos menores no cambian el rumbo (ruido del GPS). */
+const MIN_HEADING_METERS = 5;
+
+const easeInOut = (t: number): number => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
 /**
  * Mapa Leaflet con teselas claras u oscuras según el tema, marcadores propios y ruta curva con pulso.
@@ -61,13 +68,23 @@ export class MapComponent {
   private tiles?: L.TileLayer;
   private tileUrl = '';
   private readonly markerLayers = new Map<string, L.Marker>();
+  /** HTML del ícono vigente por marcador: solo se reemplaza si cambia, para no cortar transiciones CSS. */
+  private readonly iconHtml = new Map<string, string>();
+  /** Rumbo calculado del movimiento cuando el backend no lo envía. */
+  private readonly headings = new Map<string, number>();
+  private readonly glides = new Map<string, number>();
+  private readonly reduceMotion =
+    typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   private routeLayer?: L.LayerGroup;
 
   constructor() {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       this.init();
-      destroyRef.onDestroy(() => this.map?.remove());
+      destroyRef.onDestroy(() => {
+        for (const frame of this.glides.values()) cancelAnimationFrame(frame);
+        this.map?.remove();
+      });
     });
 
     effect(() => this.setTiles(this.theme.dark()));
@@ -128,18 +145,26 @@ export class MapComponent {
     const ids = new Set(markers.map((m) => m.id));
     for (const [id, layer] of this.markerLayers) {
       if (!ids.has(id)) {
+        this.stopGlide(id);
         layer.remove();
         this.markerLayers.delete(id);
+        this.iconHtml.delete(id);
+        this.headings.delete(id);
       }
     }
     for (const marker of markers) {
       const existing = this.markerLayers.get(marker.id);
-      const latLng: L.LatLngExpression = [marker.position.lat, marker.position.lng];
       if (existing) {
-        existing.setLatLng(latLng);
-        existing.setIcon(this.icon(marker));
+        const from = existing.getLatLng();
+        const start = { lat: from.lat, lng: from.lng };
+        if (marker.kind === 'driver' && haversineKm(start, marker.position) * 1000 >= MIN_HEADING_METERS) {
+          this.headings.set(marker.id, bearing(start, marker.position));
+        }
+        this.updateIcon(existing, marker);
+        if (marker.kind === 'driver' && !this.reduceMotion) this.glide(marker.id, existing, start, marker.position);
+        else existing.setLatLng([marker.position.lat, marker.position.lng]);
       } else {
-        const layer = L.marker(latLng, {
+        const layer = L.marker([marker.position.lat, marker.position.lng], {
           icon: this.icon(marker),
           keyboard: false,
           title: marker.label ?? '',
@@ -150,15 +175,51 @@ export class MapComponent {
     }
   }
 
+  /** Desliza el marcador hasta la nueva posición en lugar de saltar entre reportes del GPS. */
+  private glide(id: string, layer: L.Marker, from: LatLng, to: LatLng): void {
+    this.stopGlide(id);
+    if (from.lat === to.lat && from.lng === to.lng) return;
+    const started = performance.now();
+    const step = (now: number): void => {
+      const t = easeInOut(Math.min(1, (now - started) / GLIDE_MS));
+      layer.setLatLng([from.lat + (to.lat - from.lat) * t, from.lng + (to.lng - from.lng) * t]);
+      if (t < 1) this.glides.set(id, requestAnimationFrame(step));
+      else this.glides.delete(id);
+    };
+    this.glides.set(id, requestAnimationFrame(step));
+  }
+
+  private stopGlide(id: string): void {
+    const frame = this.glides.get(id);
+    if (frame !== undefined) cancelAnimationFrame(frame);
+    this.glides.delete(id);
+  }
+
+  private updateIcon(layer: L.Marker, marker: MapMarker): void {
+    const icon = this.icon(marker);
+    const html = String(icon.options.html);
+    if (this.iconHtml.get(marker.id) === html) return;
+    const element = layer.getElement();
+    const arrow = element?.firstElementChild as HTMLElement | null;
+    // Mismo tipo de ícono con otro rumbo: se gira la flecha existente para que la transición CSS se vea.
+    if (marker.kind === 'driver' && arrow?.classList.contains('fd-mk-driver')) {
+      arrow.style.setProperty('--heading', `${this.headingOf(marker)}deg`);
+    } else {
+      layer.setIcon(icon);
+    }
+    this.iconHtml.set(marker.id, html);
+  }
+
+  private headingOf(marker: MapMarker): number {
+    return Math.round(marker.heading ?? this.headings.get(marker.id) ?? 0);
+  }
+
   private icon(marker: MapMarker): L.DivIcon {
     const size = ICON_SIZE[marker.kind];
-    const heading = marker.kind === 'driver' ? ` style="--heading:${marker.heading ?? 0}deg"` : '';
-    return L.divIcon({
-      className: 'fd-mk',
-      html: ICON_HTML[marker.kind].replace('<span', `<span${heading}`),
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2],
-    });
+    const heading = marker.kind === 'driver' ? ` style="--heading:${this.headingOf(marker)}deg"` : '';
+    const html = ICON_HTML[marker.kind].replace('<span', `<span${heading}`);
+    if (!this.iconHtml.has(marker.id)) this.iconHtml.set(marker.id, html);
+    return L.divIcon({ className: 'fd-mk', html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
   }
 
   private drawRoute(route: MapRoute | null): void {

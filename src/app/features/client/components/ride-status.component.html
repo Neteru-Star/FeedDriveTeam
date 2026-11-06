@@ -1,6 +1,9 @@
+<p class="sr-only" aria-live="polite" aria-atomic="true">{{ announcement() }}</p>
+
 @switch (state().kind) {
   @case ('searching') {
-    <h2 aria-live="polite">Buscando conductor…</h2>
+    <app-trip-timeline class="timeline" status="requested" />
+    <h2>Buscando conductor…</h2>
     <p class="app-muted">Estamos conectándote con un conductor cercano. Esto puede tardar hasta 2 minutos.</p>
     <div
       class="progress"
@@ -18,7 +21,7 @@
         Tarifa estimada <strong class="mono">{{ r.fare | currencyCop }}</strong>
       </p>
     }
-    <ion-button expand="block" fill="clear" color="danger" (click)="cancelSearch.emit()">Cancelar solicitud</ion-button>
+    <ion-button expand="block" fill="clear" color="danger" (click)="cancelRide.emit()">Cancelar solicitud</ion-button>
   }
 
   @case ('no-drivers') {
@@ -38,31 +41,81 @@
 
   @case ('trip') {
     @if (trip(); as t) {
-      <div class="trip-head" aria-live="polite">
-        <app-status-pill [status]="t.status" />
-      </div>
-      <div class="driver">
-        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
-        <div class="who">
-          <strong>{{ t.driver.user.name }}</strong>
-          <span class="rating">
-            <app-rating-stars [value]="t.driver.rating_average" [readonly]="true" style="--star-size: 16px" />
-            <span class="mono">{{ t.driver.rating_average.toFixed(1) }}</span>
-          </span>
-          @if (t.vehicle) {
-            <small class="app-muted">{{ t.vehicle.brand }} {{ t.vehicle.model }} · {{ t.vehicle.color }}</small>
-          }
-        </div>
-        @if (t.vehicle) {
-          <app-plate [value]="t.vehicle.plate" />
-        }
-      </div>
+      <app-trip-timeline class="timeline" [status]="t.status" />
+      @if (headline(); as h) {
+        <h2>{{ h.title }}</h2>
+        <p class="app-muted">{{ h.detail }}</p>
+      }
+      <ng-container *ngTemplateOutlet="driverCard; context: { $implicit: t, call: true }" />
       @if (route(); as r) {
         <app-route-line [origin]="r.origin" [destination]="r.destination" />
       }
       <p class="fare">
         Tarifa estimada <strong class="mono">{{ t.estimated_fare | currencyCop }}</strong>
       </p>
+      @if (cancellable()) {
+        <ion-button expand="block" fill="clear" color="danger" (click)="cancelRide.emit()">Cancelar viaje</ion-button>
+      }
+    }
+  }
+
+  @case ('ended') {
+    @if (ended(); as e) {
+      @if (e.outcome === 'completed') {
+        <app-trip-timeline class="timeline" status="completed" />
+        <div class="center">
+          <span class="badge-icon done" aria-hidden="true"><ion-icon name="checkmark-circle-outline" /></span>
+          <h2>Llegaste a tu destino</h2>
+          <p class="app-muted">Gracias por viajar con FeedDrive.</p>
+        </div>
+        <div class="total">
+          <span>{{ e.finalFare === null ? 'Total estimado' : 'Total' }}</span>
+          <strong class="mono">{{ e.finalFare ?? e.trip.estimated_fare | currencyCop }}</strong>
+          <small class="app-muted">Pago en efectivo al conductor</small>
+        </div>
+      } @else {
+        <div class="center">
+          <span class="badge-icon cancelled" aria-hidden="true"><ion-icon name="close-circle-outline" /></span>
+          <h2>Tu viaje fue cancelado</h2>
+          <p class="app-muted">El viaje se canceló antes de iniciar el recorrido. No se te cobrará nada.</p>
+        </div>
+      }
+      <ng-container *ngTemplateOutlet="driverCard; context: { $implicit: e.trip, call: false }" />
+      @if (route(); as r) {
+        <app-route-line [origin]="r.origin" [destination]="r.destination" />
+      }
+      <div class="actions">
+        <ion-button expand="block" (click)="dismiss.emit()">
+          {{ e.outcome === 'completed' ? 'Listo' : 'Volver al inicio' }}
+        </ion-button>
+      </div>
     }
   }
 }
+
+<ng-template #driverCard let-t let-call="call">
+  <div class="driver">
+    <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+    <div class="who">
+      <strong>{{ t.driver.user.name }}</strong>
+      <span class="rating">
+        <app-rating-stars [value]="t.driver.rating_average" [readonly]="true" style="--star-size: 16px" />
+        <span class="mono">{{ t.driver.rating_average.toFixed(1) }}</span>
+      </span>
+      @if (t.vehicle) {
+        <small class="app-muted">{{ t.vehicle.brand }} {{ t.vehicle.model }} · {{ t.vehicle.color }}</small>
+      }
+    </div>
+    <div class="side">
+      @if (t.vehicle) {
+        <app-plate [value]="t.vehicle.plate" />
+      }
+      @if (call && phoneHref(); as href) {
+        <a class="call" [href]="href" [attr.aria-label]="'Llamar a ' + t.driver.user.name">
+          <ion-icon name="call-outline" aria-hidden="true" />
+          Llamar
+        </a>
+      }
+    </div>
+  </div>
+</ng-template>
