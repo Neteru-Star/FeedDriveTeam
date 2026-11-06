@@ -1,0 +1,65 @@
+:host {
+  flex: 1;
+  min-width: 0;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 12px 8px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--color-card-border);
+  background: var(--color-card);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  box-shadow: var(--shadow-float);
+
+  strong {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #0f1a14;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.state {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-muted);
+  background: color-mix(in srgb, var(--color-ink) 7%, transparent);
+
+  &[data-mode='online'],
+  &[data-mode='assigned'] {
+    color: #0f1a14;
+    background: var(--color-primary);
+  }
+
+  &[data-mode='review'] {
+    color: var(--color-warning);
+    background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  }
+}
+
+@media (min-width: 900px) {
+  :host {
+    flex: 0 1 360px;
+  }
+}

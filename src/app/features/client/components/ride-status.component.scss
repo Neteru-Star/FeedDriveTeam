@@ -104,25 +104,6 @@ h2 {
   gap: 8px;
 }
 
-.call {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  color: #0f1a14;
-  background: var(--color-primary);
-
-  &:focus-visible {
-    outline: 2px solid var(--color-ink);
-    outline-offset: 2px;
-  }
-}
-
 .driver {
   display: flex;
   align-items: center;

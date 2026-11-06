@@ -1,0 +1,111 @@
+.top {
+  align-items: center;
+}
+
+h2 {
+  margin: 0 0 4px;
+}
+
+.availability {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  p {
+    margin: 0;
+  }
+}
+
+.list-title {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.waiting {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 16px 0;
+}
+
+// Pulso de "buscando" mientras no hay solicitudes
+.radar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-primary-strong);
+  animation: radar 1.8s ease-out infinite;
+}
+
+@keyframes radar {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 70%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 26px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar {
+    animation: none;
+  }
+}
+
+.center {
+  text-align: center;
+
+  p {
+    margin: 0 0 16px;
+  }
+}
+
+.badge-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  font-size: 24px;
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+}
+
+.skeleton {
+  display: grid;
+  gap: 10px;
+}
+
+.passenger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0;
+
+  strong,
+  small {
+    display: block;
+  }
+}
+
+.fare {
+  margin: 14px 0 0;
+  color: var(--color-muted);
+
+  strong {
+    margin-left: 6px;
+    color: var(--color-ink);
+  }
+}

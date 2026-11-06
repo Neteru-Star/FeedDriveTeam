@@ -20,6 +20,12 @@ export interface MapPadding {
   left: number;
 }
 
+/** Puntos que deben quedar a la vista. El mapa solo vuelve a encuadrar cuando cambia `key`. */
+export interface MapFocus {
+  key: string;
+  points: LatLng[];
+}
+
 export interface MapRoute {
   from: LatLng;
   to: LatLng;

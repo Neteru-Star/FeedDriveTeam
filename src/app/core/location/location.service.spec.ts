@@ -58,4 +58,29 @@ describe('LocationService', () => {
     expect(service.status()).toBe('denied');
     expect(getCurrentPosition).not.toHaveBeenCalled();
   });
+
+  it('follows the position continuously and stops when asked', async () => {
+    type Callback = (position: { coords: object } | null, error?: unknown) => void;
+    let callback: Callback = () => undefined;
+    const cleared: string[] = [];
+    const service = setup({
+      watchPosition: async (_options: object, cb: Callback) => ((callback = cb), 'watch-1'),
+      clearWatch: async ({ id }: { id: string }) => void cleared.push(id),
+    });
+
+    await service.watch();
+    await service.watch();
+    callback({ coords: { ...coords, speed: 10 } });
+
+    expect(service.position()).toEqual({ lat: 4.6766, lng: -74.0483 });
+    expect(service.speedKmh()).toBe(36);
+    expect(service.watching()).toBe(true);
+
+    callback(null, { code: 1, message: 'denied' });
+    expect(service.status()).toBe('denied');
+
+    await service.stopWatch();
+    expect(cleared).toEqual(['watch-1']);
+    expect(service.watching()).toBe(false);
+  });
 });

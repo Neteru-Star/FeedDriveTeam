@@ -80,6 +80,16 @@ describe('MapComponent', () => {
     }
   });
 
+  it('frames the focus points only when their key changes', async () => {
+    const view = await setup({ focus: { key: 'a', points: [PARQUE_93, ANDINO] } });
+    const map = view.container.querySelector<HTMLElement>('.leaflet-map-pane')!;
+    const framed = map.style.transform;
+
+    view.fixture.componentRef.setInput('focus', { key: 'a', points: [{ lat: 4.8, lng: -74.2 }, ANDINO] });
+    view.fixture.detectChanges();
+    expect(map.style.transform).toBe(framed);
+  });
+
   it('draws the route line with its pulse', async () => {
     const { container } = await setup({ route: { from: PARQUE_93, to: ANDINO } });
 

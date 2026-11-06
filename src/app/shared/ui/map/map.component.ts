@@ -16,7 +16,7 @@ import { ThemeService } from '@core/theme/theme.service';
 import { BOGOTA, bearing, curvedRoute, haversineKm, type LatLng } from '@shared/utils/geo';
 import * as L from 'leaflet';
 
-import type { MapMarker, MapPadding, MapRoute } from './map.models';
+import type { MapFocus, MapMarker, MapPadding, MapRoute } from './map.models';
 
 const ICON_HTML: Record<MapMarker['kind'], string> = {
   user: '<span class="fd-mk-user"><i></i></span>',
@@ -55,6 +55,8 @@ export class MapComponent {
   readonly fitRoute = input(true);
   /** Zona tapada por paneles al encuadrar la ruta. */
   readonly fitPadding = input<MapPadding>({ top: 60, right: 60, bottom: 60, left: 60 });
+  /** Encuadra estos puntos (por ejemplo, el conductor y las solicitudes cercanas). */
+  readonly focus = input<MapFocus | null>(null);
 
   readonly mapClick = output<LatLng>();
   /** Centro del mapa cada vez que el usuario termina de moverlo. */
@@ -76,6 +78,7 @@ export class MapComponent {
   private readonly reduceMotion =
     typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   private routeLayer?: L.LayerGroup;
+  private focusKey: string | null = null;
 
   constructor() {
     const destroyRef = inject(DestroyRef);
@@ -94,6 +97,7 @@ export class MapComponent {
     });
     effect(() => this.syncMarkers(this.markers()));
     effect(() => this.drawRoute(this.route()));
+    effect(() => this.applyFocus(this.focus()));
   }
 
   /** Mueve el mapa a un punto con animación. */
@@ -118,6 +122,7 @@ export class MapComponent {
     this.setTiles(this.theme.dark());
     this.syncMarkers(this.markers());
     this.drawRoute(this.route());
+    this.applyFocus(this.focus());
     this.map.on('click', (e: L.LeafletMouseEvent) => this.mapClick.emit({ lat: e.latlng.lat, lng: e.latlng.lng }));
     this.map.on('moveend', () => {
       const c = this.map!.getCenter();
@@ -220,6 +225,14 @@ export class MapComponent {
     const html = ICON_HTML[marker.kind].replace('<span', `<span${heading}`);
     if (!this.iconHtml.has(marker.id)) this.iconHtml.set(marker.id, html);
     return L.divIcon({ className: 'fd-mk', html, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+  }
+
+  private applyFocus(focus: MapFocus | null): void {
+    if (!this.map || !focus || focus.key === this.focusKey || focus.points.length === 0) return;
+    this.focusKey = focus.key;
+    const { top, right, bottom, left } = this.fitPadding();
+    const bounds = L.latLngBounds(focus.points.map((p) => [p.lat, p.lng] as L.LatLngTuple));
+    this.map.fitBounds(bounds, { paddingTopLeft: [left, top], paddingBottomRight: [right, bottom], maxZoom: 16 });
   }
 
   private drawRoute(route: MapRoute | null): void {

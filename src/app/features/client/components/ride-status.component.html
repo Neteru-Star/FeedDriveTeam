@@ -121,7 +121,7 @@
         <app-plate [value]="t.vehicle.plate" />
       }
       @if (call && phoneHref(); as href) {
-        <a class="call" [href]="href" [attr.aria-label]="'Llamar a ' + t.driver.user.name">
+        <a class="app-call" [href]="href" [attr.aria-label]="'Llamar a ' + t.driver.user.name">
           <ion-icon name="call-outline" aria-hidden="true" />
           Llamar
         </a>

@@ -1,0 +1,39 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { APP_CONFIG } from '@core/config/app-config';
+import { firstValueFrom, map } from 'rxjs';
+
+import type { AcceptedTrip, Availability, DriverRideRequest, LocationReport } from './driver.models';
+
+/** Endpoints del conductor (`/api/driver`). Adapta las respuestas `{ success, ... }` a modelos. */
+@Injectable({ providedIn: 'root' })
+export class DriverApi {
+  private readonly http = inject(HttpClient);
+  private readonly base = `${inject(APP_CONFIG).apiBaseUrl}/driver`;
+
+  setAvailability(status: Availability): Promise<Availability> {
+    return firstValueFrom(
+      this.http
+        .put<{ availability_status: Availability }>(`${this.base}/availability`, { status })
+        .pipe(map((r) => r.availability_status ?? status)),
+    );
+  }
+
+  rideRequests(): Promise<DriverRideRequest[]> {
+    return firstValueFrom(
+      this.http.get<{ requests: DriverRideRequest[] }>(`${this.base}/ride-requests`).pipe(map((r) => r.requests)),
+    );
+  }
+
+  accept(requestId: number): Promise<AcceptedTrip> {
+    return firstValueFrom(
+      this.http
+        .post<{ trip: AcceptedTrip }>(`${this.base}/ride-requests/${requestId}/accept`, {})
+        .pipe(map((r) => r.trip)),
+    );
+  }
+
+  sendLocation(report: LocationReport): Promise<unknown> {
+    return firstValueFrom(this.http.post(`${this.base}/location`, report));
+  }
+}

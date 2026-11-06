@@ -1,5 +1,16 @@
 # Changelog
 
+## Fase 7: Disponibilidad y solicitudes del conductor (HU-04)
+
+- Estado de la cuenta: `GET /driver/ride-requests` responde 403 con `approval_status` si no está aprobada; la pantalla muestra "en revisión", "rechazada" o "suspendida" y permite volver a consultar.
+- Interruptor En línea / Fuera de línea (`PUT /driver/availability`); exige la ubicación y se recuerda en el teléfono por conductor.
+- GPS continuo (`watchPosition` de Capacitor) enviado a `POST /driver/location` con throttle de 5 s, con rumbo, velocidad y viaje.
+- Solicitudes cercanas consultadas cada 5 s (pausa en segundo plano), ordenadas por distancia de recogida, con ganancia, tiempo para recoger y puntos en el mapa encuadrados sobre el panel.
+- Aceptar con vibración; el 409 marca la tarjeta "Otro conductor tomó este viaje" antes de quitarla. "Rechazar" la oculta en el teléfono.
+- Aviso `aria-live` y vibración corta cuando llega una solicitud nueva; el viaje aceptado se retoma al recargar.
+- Mapa: nuevo `focus` para encuadrar varios puntos sin saltar con cada posición; botón "Llamar" global (`.app-call`).
+- Pruebas: store del conductor (403, 409, en línea, polling, rechazar, retomar), envío del GPS con throttle, seguimiento del GPS y E2E con dos conductores reales compitiendo por la misma solicitud.
+
 ## Fase 6: Historial y calificación (HU-08)
 
 - "Mis viajes" con `GET /client/trips`: tarjetas con fecha, estado, ruta, conductor, placa y tarifa, deslizar para actualizar (`ion-refresher`) y scroll infinito (`ion-infinite-scroll`).
