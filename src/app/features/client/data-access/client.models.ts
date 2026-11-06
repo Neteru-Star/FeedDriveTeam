@@ -70,12 +70,43 @@ export type ClientActive =
   | { has_active: true; type: 'request'; data: RideRequest }
   | { has_active: true; type: 'trip'; data: ActiveTrip };
 
-/** Viaje del historial (`GET /client/trips`): solo los campos que usa la app. */
-export interface TripSummary {
+/**
+ * Viaje del historial (`GET /client/trips`). La documentación garantiza id, status, final_fare, completed_at,
+ * driver.user.name y vehicle.plate; el resto se muestra solo si el backend lo envía.
+ */
+export interface TripRecord {
   id: number;
   status: TripStatus;
   final_fare: number | null;
+  completed_at: string | null;
   estimated_fare?: number;
-  completed_at?: string | null;
+  created_at?: string;
   cancel_reason?: string | null;
+  origin_name?: string;
+  destination_name?: string;
+  distance_travelled_km?: number | null;
+  duration_travelled_min?: number | null;
+  driver?: { user: { name: string; phone?: string }; rating_average?: number } | null;
+  vehicle?: { plate: string; brand?: string; model?: string; color?: string } | null;
+  rating?: { score: number; comment: string | null } | null;
+}
+
+/** Página del historial ya adaptada: los viajes y si hay más por cargar. */
+export interface TripPage {
+  items: TripRecord[];
+  page: number;
+  hasMore: boolean;
+}
+
+export interface RatingPayload {
+  score: number;
+  comment?: string;
+  has_incident: boolean;
+}
+
+export interface TripRating {
+  id: number;
+  trip_id: number;
+  score: number;
+  comment: string | null;
 }

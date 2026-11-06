@@ -190,7 +190,7 @@ export class ActiveRideStore {
     await this.storage.clear();
     const summary = await this.api
       .trips()
-      .then((trips) => trips.find((t) => t.id === trip.id))
+      .then((page) => page.items.find((t) => t.id === trip.id))
       .catch(() => undefined);
     const outcome: TripOutcome =
       summary?.status === 'completed' || summary?.status === 'cancelled'

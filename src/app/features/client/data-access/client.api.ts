@@ -9,9 +9,27 @@ import type {
   FareEstimate,
   RideRequest,
   RideRequestPayload,
+  RatingPayload,
   RouteCoords,
-  TripSummary,
+  TripPage,
+  TripRating,
+  TripRecord,
 } from './client.models';
+
+/** Respuesta paginada de Laravel; la documentación solo muestra `data`, así que el resto es opcional. */
+interface LaravelPage<T> {
+  data: T[];
+  current_page?: number;
+  last_page?: number;
+  next_page_url?: string | null;
+}
+
+/** Hay más páginas según lo que traiga el backend; sin metadatos, se sigue pidiendo hasta recibir una vacía. */
+export function hasMorePages(page: LaravelPage<unknown>, requested: number): boolean {
+  if (page.next_page_url !== undefined) return page.next_page_url !== null;
+  if (page.last_page !== undefined) return (page.current_page ?? requested) < page.last_page;
+  return page.data.length > 0;
+}
 
 /** Endpoints del pasajero (`/api/client`) y la tarifa pública. Adapta las respuestas `{ success, ... }` a modelos. */
 @Injectable({ providedIn: 'root' })
@@ -44,11 +62,21 @@ export class ClientApi {
   }
 
   /** Una página del historial, del viaje más reciente al más antiguo. */
-  trips(page = 1): Promise<TripSummary[]> {
+  trips(page = 1): Promise<TripPage> {
     return firstValueFrom(
-      this.http
-        .get<{ trips: { data: TripSummary[] } }>(`${this.base}/client/trips`, { params: { page } })
-        .pipe(map((r) => r.trips.data)),
+      this.http.get<{ trips: LaravelPage<TripRecord> }>(`${this.base}/client/trips`, { params: { page } }).pipe(
+        map(({ trips }) => ({
+          items: trips.data,
+          page: trips.current_page ?? page,
+          hasMore: hasMorePages(trips, page),
+        })),
+      ),
+    );
+  }
+
+  rate(tripId: number, payload: RatingPayload): Promise<{ message: string; rating: TripRating }> {
+    return firstValueFrom(
+      this.http.post<{ message: string; rating: TripRating }>(`${this.base}/client/trips/${tripId}/rating`, payload),
     );
   }
 

@@ -40,10 +40,13 @@ export class RideStatusComponent {
   readonly state = input.required<RideState>();
   /** Lo que hay en pantalla todavía se puede cancelar. */
   readonly cancellable = input(false);
+  /** Calificación del viaje terminado: estrellas, 0 si ya estaba calificado, null si falta calificar. */
+  readonly rating = input<number | null>(null);
 
   readonly cancelRide = output();
   readonly retry = output();
   readonly dismiss = output();
+  readonly rate = output();
 
   private readonly now = toSignal(interval(TICK_MS).pipe(map(() => Date.now())), { initialValue: Date.now() });
 

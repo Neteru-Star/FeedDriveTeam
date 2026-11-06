@@ -1,5 +1,15 @@
 # Changelog
 
+## Fase 6: Historial y calificación (HU-08)
+
+- "Mis viajes" con `GET /client/trips`: tarjetas con fecha, estado, ruta, conductor, placa y tarifa, deslizar para actualizar (`ion-refresher`) y scroll infinito (`ion-infinite-scroll`).
+- Detalle del viaje con tarifa final, distancia y duración reales, conductor, motivo de cancelación y la calificación dada.
+- Calificación (`POST /client/trips/{id}/rating`) con estrellas, comentario y reporte de incidente (que exige describirlo); se abre sola al completar un viaje y también desde el historial y el detalle.
+- Un 400 de "ya fue calificado" deja de ofrecer calificar; las calificaciones enviadas se recuerdan en el teléfono porque la documentación del historial no las incluye.
+- El título de cada pantalla se anuncia como encabezado; "1 estrella" en singular.
+- Backend simulado: conexiones abiertas 65 s para evitar `ECONNRESET` en las pruebas.
+- Pruebas: store del historial (páginas, vacío, errores, calificar, 400), componente de calificación, utilidades del viaje y E2E de calificar al terminar, desde el historial, dos veces y scroll infinito.
+
 ## Fase 5: Viaje activo en tiempo real (HU-06)
 
 - Máquina de estados del viaje en `trip-status.ts`: textos del pasajero, mensajes, cancelación por rol, acción del conductor por estado y avances válidos.

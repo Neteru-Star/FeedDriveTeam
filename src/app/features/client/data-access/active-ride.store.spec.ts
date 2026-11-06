@@ -6,7 +6,7 @@ import { ToastService } from '@shared/ui/toast/toast.service';
 import { ActiveRideStorage } from './active-ride.storage';
 import { ActiveRideStore, SEARCH_TIMEOUT_MS } from './active-ride.store';
 import { ClientApi } from './client.api';
-import type { ActiveTrip, ClientActive, RideRequest, TripSummary } from './client.models';
+import type { ActiveTrip, ClientActive, RideRequest, TripRecord } from './client.models';
 
 const POLL_MS = 5000;
 const payload = {
@@ -49,7 +49,7 @@ class FakeApi {
   active: ClientActive = { has_active: false };
   requestError: ApiError | null = null;
   cancelError: ApiError | null = null;
-  history: TripSummary[] = [];
+  history: TripRecord[] = [];
   /** Ids que el backend no reconoce al cancelar (404). */
   unknownIds: number[] = [];
   readonly cancelled: { id: number; reason: string }[] = [];
@@ -62,7 +62,7 @@ class FakeApi {
   activeFare = async () => ({});
   estimate = async () => ({});
   getActive = async (): Promise<ClientActive> => this.active;
-  trips = async (): Promise<TripSummary[]> => this.history;
+  trips = async () => ({ items: this.history, page: 1, hasMore: false });
   cancel = async (id: number, reason: string): Promise<unknown> => {
     if (this.unknownIds.includes(id)) throw new ApiError(404, 'Solicitud no encontrada.');
     if (this.cancelError) throw this.cancelError;
@@ -198,7 +198,7 @@ describe('ActiveRideStore', () => {
 
     await step('driver_arrived');
     await step('in_progress');
-    api.history = [{ id: 3, status: 'completed', final_fare: 7200 }];
+    api.history = [{ id: 3, status: 'completed', final_fare: 7200, completed_at: null }];
     api.active = { has_active: false };
     await vi.advanceTimersByTimeAsync(POLL_MS);
 
@@ -287,7 +287,7 @@ describe('ActiveRideStore', () => {
     const state = store.state();
     expect(state.kind === 'trip' && state.trip.status).toBe('in_progress');
     // Sigue consultando el viaje.
-    api.history = [{ id: 3, status: 'completed', final_fare: 6500 }];
+    api.history = [{ id: 3, status: 'completed', final_fare: 6500, completed_at: null }];
     api.active = { has_active: false };
     await vi.advanceTimersByTimeAsync(POLL_MS);
     expect(store.state().kind).toBe('ended');

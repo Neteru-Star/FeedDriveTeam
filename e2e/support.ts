@@ -100,6 +100,33 @@ export async function reportLocation(
   await request.post(`${API}/driver/location`, { headers: auth(driverToken), data: position });
 }
 
+/** Viaje completo por la API (solicitud, aceptación, llegada, inicio y fin). Devuelve el id del viaje. */
+export async function completeTripByApi(
+  request: APIRequestContext,
+  clientToken: string,
+  driverToken: string,
+): Promise<number> {
+  await requestRideByApi(request, clientToken);
+  const tripId = await acceptRequest(request, driverToken, clientToken);
+  for (const action of ['arrive', 'start', 'complete'] as const) {
+    await advanceTrip(request, driverToken, tripId, action);
+  }
+  return tripId;
+}
+
+/** El pasajero califica un viaje por la API, como si lo hubiera hecho desde otro dispositivo. */
+export async function rateByApi(
+  request: APIRequestContext,
+  clientToken: string,
+  tripId: number,
+  score: number,
+): Promise<void> {
+  await request.post(`${API}/client/trips/${tripId}/rating`, {
+    headers: auth(clientToken),
+    data: { score, has_incident: false },
+  });
+}
+
 /** Crea una solicitud por la API, como si el pasajero la hubiera pedido desde otro dispositivo. */
 export async function requestRideByApi(request: APIRequestContext, clientToken: string): Promise<void> {
   await request.post(`${API}/client/ride-requests`, {

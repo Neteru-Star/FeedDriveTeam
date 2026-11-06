@@ -36,6 +36,8 @@
   <app-ride-status
     [state]="ride.state()"
     [cancellable]="ride.cancellable()"
+    [rating]="endedRating()"
+    (rate)="rateOpen.set(true)"
     (cancelRide)="askCancelReason()"
     (retry)="retryRide()"
     (dismiss)="ride.dismiss()"
@@ -87,3 +89,11 @@
   </div>
   } }
 </app-map-page>
+
+<ion-modal [isOpen]="rateOpen()" (didDismiss)="rateOpen.set(false)">
+  <ng-template>
+    @if (rateTarget(); as target) {
+    <app-rate-trip [target]="target" (done)="rateOpen.set(false)" (closed)="rateOpen.set(false)" />
+    }
+  </ng-template>
+</ion-modal>

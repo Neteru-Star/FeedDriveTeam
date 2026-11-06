@@ -11,8 +11,8 @@
 | 3    | Shell de la aplicación y mapa (HU-02)      | Lista: 72 unitarias y 38 E2E                    |
 | 4    | Cliente: estimar y solicitar viaje (HU-03) | Lista: 91 unitarias y 48 E2E                    |
 | 5    | Cliente: viaje activo en tiempo real       | Lista: 109 unitarias y 54 E2E                   |
-| 6    | Cliente: historial y calificación          | Siguiente                                       |
-| 7    | Conductor: disponibilidad y solicitudes    | Pendiente                                       |
+| 6    | Cliente: historial y calificación          | Lista: 125 unitarias y 62 E2E                   |
+| 7    | Conductor: disponibilidad y solicitudes    | Siguiente                                       |
 | 8    | Conductor: ejecución del viaje             | Pendiente                                       |
 | 9    | Admin: dashboard, conductores y tarifas    | Pendiente                                       |
 | 10   | Admin: viajes, reportes y auditoría        | Pendiente                                       |
@@ -49,4 +49,5 @@ Detalle en la Tabla 12 de `UberTeam_Historias_y_Mockups_APA.docx`.
 - `/client/active` no dice cómo terminó un viaje: al desaparecer se busca en `/client/trips` (estado y tarifa final); sin historial se deduce por el último estado.
 - `POST /client/cancel/{id}` no aclara si el id es del viaje o de la solicitud: se usa el `id` de `/client/active` y, ante un 404, el de la solicitud.
 - No hay tiempo estimado de llegada ni rutas: se calcula con Haversine × 1,3 a 22 km/h.
+- `GET /client/trips` documenta solo `data` (sin metadatos de paginación ni calificación): la app usa `next_page_url` o `last_page` si llegan y, si no, pide páginas hasta recibir una vacía; las calificaciones enviadas se recuerdan en el teléfono.
 - `/auth/me` no trae el perfil del conductor (placa, calificación, aprobación): la tarjeta del conductor muestra solo su nombre por ahora.

@@ -1211,6 +1211,11 @@ const server = createServer(async (req, res) => {
 
 seed();
 if (AUTOPILOT) setInterval(autopilotTick, 2000);
+// Conexiones reutilizadas por los clientes de prueba: si el servidor las cierra a los 5 s (valor por defecto
+// de Node), una petición puede salir justo por un socket que se está cerrando y fallar con ECONNRESET.
+server.keepAliveTimeout = 65_000;
+server.headersTimeout = 66_000;
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Mock FeedDrive API en http://localhost:${PORT}/api ${AUTOPILOT ? '(autopiloto activo)' : ''}`);
 });

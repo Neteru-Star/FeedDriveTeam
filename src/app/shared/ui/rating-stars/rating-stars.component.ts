@@ -10,7 +10,7 @@ import { ChangeDetectionStrategy, Component, input, model } from '@angular/core'
           type="button"
           role="radio"
           [attr.aria-checked]="star === value()"
-          [attr.aria-label]="star + ' estrellas'"
+          [attr.aria-label]="star === 1 ? '1 estrella' : star + ' estrellas'"
           [class.on]="star <= value()"
           [disabled]="readonly()"
           (click)="value.set(star)"

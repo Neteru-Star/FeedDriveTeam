@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { APP_CONFIG } from '@core/config/app-config';
 
-import { ClientApi } from './client.api';
+import { ClientApi, hasMorePages } from './client.api';
 
 const API = 'http://api.test/api';
 
@@ -67,12 +67,32 @@ describe('ClientApi', () => {
     await cancel;
   });
 
-  it('reads a page of the trip history', async () => {
+  it('reads a page of the trip history and knows if there are more', async () => {
     const trips = api.trips(2);
-    backend
-      .expectOne(`${API}/client/trips?page=2`)
-      .flush({ success: true, trips: { data: [{ id: 3, status: 'completed', final_fare: 9300 }] } });
+    backend.expectOne(`${API}/client/trips?page=2`).flush({
+      success: true,
+      trips: { data: [{ id: 3, status: 'completed' }], current_page: 2, next_page_url: null },
+    });
 
-    expect(await trips).toEqual([{ id: 3, status: 'completed', final_fare: 9300 }]);
+    expect(await trips).toEqual({ items: [{ id: 3, status: 'completed' }], page: 2, hasMore: false });
+  });
+
+  it('sends the rating of a trip', async () => {
+    const rated = api.rate(3, { score: 5, comment: 'Muy amable', has_incident: false });
+    const req = backend.expectOne(`${API}/client/trips/3/rating`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ score: 5, comment: 'Muy amable', has_incident: false });
+    req.flush({ success: true, message: 'Gracias', rating: { id: 1, trip_id: 3, score: 5, comment: 'Muy amable' } });
+
+    expect((await rated).rating.score).toBe(5);
+  });
+
+  it('detects more pages with or without Laravel pagination data', () => {
+    expect(hasMorePages({ data: [], next_page_url: 'http://x?page=3' }, 2)).toBe(true);
+    expect(hasMorePages({ data: [{}], current_page: 2, last_page: 2 }, 2)).toBe(false);
+    expect(hasMorePages({ data: [{}], current_page: 1, last_page: 2 }, 1)).toBe(true);
+    // Solo `data`, como en la documentación: se sigue hasta recibir una página vacía.
+    expect(hasMorePages({ data: [{}] }, 1)).toBe(true);
+    expect(hasMorePages({ data: [] }, 4)).toBe(false);
   });
 });

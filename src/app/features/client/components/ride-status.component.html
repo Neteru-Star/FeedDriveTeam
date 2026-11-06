@@ -85,6 +85,16 @@
         <app-route-line [origin]="r.origin" [destination]="r.destination" />
       }
       <div class="actions">
+        @if (e.outcome === 'completed') {
+          @if (rating(); as score) {
+            <p class="rated app-muted">
+              Calificaste este viaje
+              <app-rating-stars [value]="score" [readonly]="true" style="--star-size: 18px" />
+            </p>
+          } @else if (rating() === null) {
+            <ion-button expand="block" fill="outline" color="dark" (click)="rate.emit()">Calificar viaje</ion-button>
+          }
+        }
         <ion-button expand="block" (click)="dismiss.emit()">
           {{ e.outcome === 'completed' ? 'Listo' : 'Volver al inicio' }}
         </ion-button>

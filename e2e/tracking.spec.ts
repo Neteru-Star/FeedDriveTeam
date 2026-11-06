@@ -62,7 +62,12 @@ test('follows the trip from the driver on the way to the final fare (HU-06)', as
 
   await advanceTrip(request, driver.token, tripId, 'complete');
   await page.clock.runFor(POLL_MS);
+  // Se abre la calificación (HU-08); el pasajero la deja para después.
+  await page.locator('app-rate-trip').getByRole('button', { name: 'Ahora no' }).click();
+  await page.clock.runFor(1_000);
+  await expect(page.locator('app-rate-trip')).toHaveCount(0);
   await expect(heading(page, 'Llegaste a tu destino')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Calificar viaje' })).toBeVisible();
   await expect(page.locator('app-ride-status .total strong')).toHaveText(/^\$\s[\d.]+$/);
   await expect(page.locator('app-ride-status [aria-live]')).toHaveText('Llegaste a tu destino.');
 

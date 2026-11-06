@@ -67,7 +67,9 @@ test('opens the passenger menu and the trips section', async ({ page }) => {
   await page.getByRole('button', { name: 'Abrir menú' }).click();
   await page.getByRole('link', { name: 'Mis viajes' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Aún no tienes viajes' })).toBeVisible();
+  // El pasajero de prueba del backend simulado ya tiene viajes.
+  await expect(page.getByRole('heading', { name: 'Mis viajes' })).toBeVisible();
+  await expect(page.locator('app-trip-card').first()).toBeVisible();
 });
 
 test('shows the driver shell with the offline panel', async ({ page }) => {

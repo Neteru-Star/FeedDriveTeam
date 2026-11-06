@@ -16,6 +16,7 @@ import { AlertController } from '@ionic/angular/alert-controller';
 import { IonButton } from '@ionic/angular/ion-button';
 import { IonIcon } from '@ionic/angular/ion-icon';
 import { IonMenuToggle } from '@ionic/angular/ion-menu-toggle';
+import { IonModal } from '@ionic/angular/ion-modal';
 import { MapPageComponent } from '@layout/map-page.component';
 import { LocationNoticeComponent } from '@shared/ui/location-notice/location-notice.component';
 import { MapComponent } from '@shared/ui/map/map.component';
@@ -27,11 +28,14 @@ import { catchError, debounceTime, filter, of, switchMap } from 'rxjs';
 
 import { FareConfirmComponent } from '../components/fare-confirm.component';
 import { PlaceSearchComponent } from '../components/place-search.component';
+import { RateTripComponent } from '../components/rate-trip.component';
 import { RideStatusComponent } from '../components/ride-status.component';
 import { ActiveRideStore, CANCEL_REASON_MAX } from '../data-access/active-ride.store';
 import type { RideRequest, RideRequestPayload } from '../data-access/client.models';
 import { FareQuoteStore } from '../data-access/fare-quote.store';
 import { TripDraftStore, type PointKind } from '../data-access/trip-draft.store';
+import { TripHistoryStore } from '../data-access/trip-history.store';
+import type { RateTarget } from '../data-access/trip-record';
 
 const CURRENT_LOCATION = 'Mi ubicación actual';
 /** Mismo punto de corte que la hoja lateral de map-page.component.scss. */
@@ -57,6 +61,7 @@ const requestRoute = (r: RideRequest): MapRoute => ({
     IonButton,
     IonIcon,
     IonMenuToggle,
+    IonModal,
     MapPageComponent,
     MapComponent,
     LocationNoticeComponent,
@@ -64,6 +69,7 @@ const requestRoute = (r: RideRequest): MapRoute => ({
     RouteLineComponent,
     FareConfirmComponent,
     RideStatusComponent,
+    RateTripComponent,
   ],
   templateUrl: 'client-home.page.html',
   styleUrl: 'client-home.page.scss',
@@ -74,6 +80,7 @@ export class ClientHomePage {
   protected readonly draft = inject(TripDraftStore);
   protected readonly fares = inject(FareQuoteStore);
   protected readonly ride = inject(ActiveRideStore);
+  private readonly history = inject(TripHistoryStore);
   private readonly geocoder = inject(Geocoder);
   private readonly toast = inject(ToastService);
   private readonly alerts = inject(AlertController);
@@ -90,6 +97,23 @@ export class ClientHomePage {
   private readonly pickCenter = signal<LatLng | null>(null);
   /** Paso del pasajero mientras no hay viaje: planear la ruta o confirmar la tarifa. */
   protected readonly step = signal<'plan' | 'confirm'>('plan');
+
+  /** Viaje recién completado, para calificarlo (HU-08). */
+  private readonly completedTrip = computed(() => {
+    const state = this.ride.state();
+    return state.kind === 'ended' && state.outcome === 'completed' ? state.trip : null;
+  });
+  protected readonly endedRating = computed(() => {
+    const trip = this.completedTrip();
+    return trip ? this.history.ratingOf({ id: trip.id, rating: null }) : null;
+  });
+  protected readonly rateTarget = computed<RateTarget | null>(() => {
+    const trip = this.completedTrip();
+    return trip
+      ? { id: trip.id, driverName: trip.driver.user.name, plate: trip.vehicle?.plate, date: new Date().toISOString() }
+      : null;
+  });
+  protected readonly rateOpen = signal(false);
 
   /** Hay una solicitud o un viaje en curso: el panel muestra su estado en lugar del planeador. */
   protected readonly rideActive = computed(() => !['idle', 'requesting'].includes(this.ride.state().kind));
@@ -167,6 +191,17 @@ export class ClientHomePage {
     void this.locate();
     void this.ride.restore();
     void this.fares.loadActiveFare();
+
+    // Al completar un viaje se pide la calificación una sola vez; el resumen permite hacerlo después.
+    let askedFor: number | null = null;
+    effect(() => {
+      const trip = this.completedTrip();
+      if (!trip || trip.id === askedFor) return;
+      askedFor = trip.id;
+      untracked(() => {
+        if (this.history.ratingOf({ id: trip.id, rating: null }) === null) this.rateOpen.set(true);
+      });
+    });
 
     // Al terminar o cancelarse un viaje, el pasajero vuelve a planear desde su ubicación.
     let previous = this.ride.state().kind;
