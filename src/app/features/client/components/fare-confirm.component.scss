@@ -1,0 +1,95 @@
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 16px 0 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+
+  div {
+    min-width: 0;
+  }
+
+  dt {
+    color: var(--color-muted);
+    font-size: 12px;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    font-size: 17px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  &.loading ion-skeleton-text {
+    height: 34px;
+    border-radius: 8px;
+  }
+}
+
+.breakdown {
+  margin-bottom: 12px;
+
+  summary {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--color-primary-strong);
+    text-underline-offset: 3px;
+  }
+
+  app-fare-display {
+    display: block;
+    margin-top: 10px;
+  }
+}
+
+.payment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-weight: 600;
+
+  ion-icon {
+    font-size: 20px;
+    color: var(--color-primary-strong);
+  }
+
+  small {
+    margin-left: auto;
+    font-weight: 400;
+    font-size: 12px;
+  }
+}
+
+.actions ion-button {
+  margin-bottom: 6px;
+}
+
+.error {
+  text-align: center;
+
+  h2 {
+    margin: 10px 0 4px;
+  }
+
+  p {
+    margin: 0 0 16px;
+  }
+}
+
+.error-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+}

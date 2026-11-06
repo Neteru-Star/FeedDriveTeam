@@ -1,28 +1,52 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Geocoder, type Place } from '@core/geo/geocoder';
 import { LocationService } from '@core/location/location.service';
+import { AlertController } from '@ionic/angular/alert-controller';
 import { IonButton } from '@ionic/angular/ion-button';
 import { IonIcon } from '@ionic/angular/ion-icon';
 import { IonMenuToggle } from '@ionic/angular/ion-menu-toggle';
 import { MapPageComponent } from '@layout/map-page.component';
 import { LocationNoticeComponent } from '@shared/ui/location-notice/location-notice.component';
 import { MapComponent } from '@shared/ui/map/map.component';
-import type { MapMarker, MapPadding } from '@shared/ui/map/map.models';
+import type { MapMarker, MapPadding, MapRoute } from '@shared/ui/map/map.models';
 import { RouteLineComponent } from '@shared/ui/route-line/route-line.component';
 import { ToastService } from '@shared/ui/toast/toast.service';
 import { BOGOTA, formatDistance, type LatLng } from '@shared/utils/geo';
 import { catchError, debounceTime, filter, of, switchMap } from 'rxjs';
 
+import { FareConfirmComponent } from '../components/fare-confirm.component';
 import { PlaceSearchComponent } from '../components/place-search.component';
+import { RideStatusComponent } from '../components/ride-status.component';
+import { ActiveRideStore } from '../data-access/active-ride.store';
+import type { RideRequest, RideRequestPayload } from '../data-access/client.models';
+import { FareQuoteStore } from '../data-access/fare-quote.store';
 import { TripDraftStore, type PointKind } from '../data-access/trip-draft.store';
 
 const CURRENT_LOCATION = 'Mi ubicación actual';
 /** Mismo punto de corte que la hoja lateral de map-page.component.scss. */
 const WIDE_SCREEN_PX = 900;
 const REVERSE_DEBOUNCE_MS = 500;
+const SAME_PLACE_ERROR = 'El origen y el destino no pueden ser el mismo lugar.';
 
-/** HU-02: mapa centrado en el pasajero y elección de origen y destino por búsqueda o en el mapa. */
+const requestRoute = (r: RideRequest): MapRoute => ({
+  from: { lat: r.origin_latitude, lng: r.origin_longitude },
+  to: { lat: r.destination_latitude, lng: r.destination_longitude },
+});
+
+/**
+ * Pantalla principal del pasajero.
+ * HU-02: mapa y elección de origen y destino. HU-03: tarifa estimada, solicitud y espera del conductor.
+ */
 @Component({
   selector: 'app-client-home',
   imports: [
@@ -34,6 +58,8 @@ const REVERSE_DEBOUNCE_MS = 500;
     LocationNoticeComponent,
     PlaceSearchComponent,
     RouteLineComponent,
+    FareConfirmComponent,
+    RideStatusComponent,
   ],
   templateUrl: 'client-home.page.html',
   styleUrl: 'client-home.page.scss',
@@ -42,8 +68,11 @@ const REVERSE_DEBOUNCE_MS = 500;
 export class ClientHomePage {
   protected readonly location = inject(LocationService);
   protected readonly draft = inject(TripDraftStore);
+  protected readonly fares = inject(FareQuoteStore);
+  protected readonly ride = inject(ActiveRideStore);
   private readonly geocoder = inject(Geocoder);
   private readonly toast = inject(ToastService);
+  private readonly alerts = inject(AlertController);
   private readonly map = viewChild.required(MapComponent);
 
   protected readonly center = signal<LatLng>(BOGOTA);
@@ -54,6 +83,12 @@ export class ClientHomePage {
   /** Extremo que se está eligiendo moviendo el mapa, o null. */
   protected readonly picking = signal<PointKind | null>(null);
   private readonly pickCenter = signal<LatLng | null>(null);
+  /** Paso del pasajero mientras no hay viaje: planear la ruta o confirmar la tarifa. */
+  protected readonly step = signal<'plan' | 'confirm'>('plan');
+
+  /** Hay una solicitud o un viaje en curso: el panel muestra su estado en lugar del planeador. */
+  protected readonly rideActive = computed(() => !['idle', 'requesting'].includes(this.ride.state().kind));
+  protected readonly quote = computed(() => this.fares.quoteFor(this.draft.route()));
 
   /** Dirección bajo el pin mientras se elige en el mapa. */
   protected readonly pickedPlace = toSignal(
@@ -76,11 +111,36 @@ export class ClientHomePage {
     const km = this.draft.distanceKm();
     return km === null ? '' : formatDistance(km);
   });
+  protected readonly sheetLabel = computed(() => {
+    if (this.rideActive()) return 'Tu viaje';
+    if (this.picking()) return 'Elegir en el mapa';
+    return this.step() === 'confirm' ? 'Confirmar viaje' : 'Planear viaje';
+  });
+
+  /** Ruta en el mapa: la de la solicitud en curso o la que se está planeando. */
+  protected readonly mapRoute = computed<MapRoute | null>(() => {
+    const request = this.ride.request();
+    if (this.rideActive()) return request ? requestRoute(request) : null;
+    return this.picking() ? null : this.draft.route();
+  });
 
   protected readonly markers = computed<MapMarker[]>(() => {
     const markers: MapMarker[] = [];
     const me = this.location.position();
     if (me) markers.push({ id: 'me', kind: 'user', position: me, label: CURRENT_LOCATION });
+    const route = this.mapRoute();
+    const state = this.ride.state();
+    if (this.rideActive()) {
+      if (route) {
+        markers.push({ id: 'origin', kind: 'origin', position: route.from });
+        markers.push({ id: 'destination', kind: 'destination', position: route.to });
+      }
+      const driver = state.kind === 'trip' ? state.trip.driver.latest_location : null;
+      if (driver) {
+        markers.push({ id: 'driver', kind: 'driver', position: { lat: driver.latitude, lng: driver.longitude } });
+      }
+      return markers;
+    }
     const origin = this.draft.origin();
     const destination = this.draft.destination();
     // El origen tomado del GPS ya se ve como "mi ubicación" hasta que hay ruta.
@@ -100,6 +160,21 @@ export class ClientHomePage {
 
   constructor() {
     void this.locate();
+    void this.ride.restore();
+    void this.fares.loadActiveFare();
+
+    // Al terminar o cancelarse un viaje, el pasajero vuelve a planear desde su ubicación.
+    let previous = this.ride.state().kind;
+    effect(() => {
+      const kind = this.ride.state().kind;
+      if (previous === 'trip' && kind === 'idle') {
+        untracked(() => {
+          this.draft.clear('destination');
+          this.step.set('plan');
+        });
+      }
+      previous = kind;
+    });
   }
 
   protected async locate(): Promise<void> {
@@ -125,8 +200,7 @@ export class ClientHomePage {
   }
 
   protected select(kind: PointKind, place: Place): void {
-    const accepted = this.draft.set(kind, { ...place, source: 'search' });
-    if (!accepted) void this.toast.error('El origen y el destino no pueden ser el mismo lugar.');
+    if (!this.draft.set(kind, { ...place, source: 'search' })) void this.toast.error(SAME_PLACE_ERROR);
   }
 
   protected startPicking(kind: PointKind, at?: LatLng): void {
@@ -142,6 +216,7 @@ export class ClientHomePage {
   }
 
   protected onMapClick(point: LatLng): void {
+    if (this.rideActive() || this.step() === 'confirm') return;
     // Tocar el mapa sin estar eligiendo empieza a elegir el destino en ese punto (HU-02).
     if (this.picking()) this.map().flyTo(point);
     else this.startPicking('destination', point);
@@ -160,9 +235,77 @@ export class ClientHomePage {
     const label = place?.label ?? 'Punto en el mapa';
     const detail = place?.detail ?? `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`;
     if (!this.draft.set(kind, { label, detail, position: point, source: 'map' })) {
-      void this.toast.error('El origen y el destino no pueden ser el mismo lugar.');
+      void this.toast.error(SAME_PLACE_ERROR);
       return;
     }
     this.cancelPicking();
+  }
+
+  /** "Ver tarifa": cotiza la ruta, salvo que ya esté cotizada y no haya cambiado. */
+  protected showFare(): void {
+    const route = this.draft.route();
+    if (!route) return;
+    this.step.set('confirm');
+    if (this.quote().status !== 'ready') void this.fares.estimate(route);
+  }
+
+  protected retryEstimate(): void {
+    const route = this.draft.route();
+    if (route) void this.fares.estimate(route);
+  }
+
+  protected async requestRide(): Promise<void> {
+    const origin = this.draft.origin();
+    const destination = this.draft.destination();
+    if (!origin || !destination) return;
+    await this.submit({
+      origin_name: origin.label,
+      origin_latitude: origin.position.lat,
+      origin_longitude: origin.position.lng,
+      destination_name: destination.label,
+      destination_latitude: destination.position.lat,
+      destination_longitude: destination.position.lng,
+    });
+  }
+
+  /** "Reintentar" después de 2 minutos sin conductores: la misma ruta de la solicitud anterior. */
+  protected async retryRide(): Promise<void> {
+    const request = this.ride.request();
+    if (!request) return;
+    const {
+      origin_name,
+      origin_latitude,
+      origin_longitude,
+      destination_name,
+      destination_latitude,
+      destination_longitude,
+    } = request;
+    await this.submit({
+      origin_name,
+      origin_latitude,
+      origin_longitude,
+      destination_name,
+      destination_latitude,
+      destination_longitude,
+    });
+  }
+
+  private async submit(payload: RideRequestPayload): Promise<void> {
+    const result = await this.ride.requestRide(payload);
+    if (result === 'ok') this.step.set('plan');
+    if (result === 'already-active') await this.showActiveTripAlert();
+  }
+
+  /** Respuesta 400 del backend: ya hay una solicitud o un viaje en curso. */
+  private async showActiveTripAlert(): Promise<void> {
+    const alert = await this.alerts.create({
+      header: 'Ya tienes un viaje activo',
+      message: 'Espera a que termine tu viaje actual antes de solicitar otro.',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { text: 'Ver mi viaje', handler: () => void this.ride.restore() },
+      ],
+    });
+    await alert.present();
   }
 }

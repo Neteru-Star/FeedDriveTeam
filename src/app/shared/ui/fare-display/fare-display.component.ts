@@ -1,5 +1,5 @@
-import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { CurrencyCopPipe } from '@shared/pipes/format.pipes';
 
 export interface FareBreakdownItem {
   label: string;
@@ -9,11 +9,11 @@ export interface FareBreakdownItem {
 /** Tarifa como protagonista: cifra grande, chip de demanda y desglose proporcional. */
 @Component({
   selector: 'app-fare-display',
-  imports: [CurrencyPipe],
+  imports: [CurrencyCopPipe],
   template: `
     <div class="fare">
       <span class="label">Tarifa estimada</span>
-      <strong class="amount display">{{ total() | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+      <strong class="amount display">{{ total() | currencyCop }}</strong>
       @if (surge() > 1) {
         <span class="surge">Alta demanda ×{{ surge() }}</span>
       }
@@ -23,7 +23,7 @@ export interface FareBreakdownItem {
             <li>
               <span>{{ item.label }}</span>
               <span class="bar"><i [style.width.%]="(item.amount / max()) * 100"></i></span>
-              <span class="mono">{{ item.amount | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+              <span class="mono">{{ item.amount | currencyCop }}</span>
             </li>
           }
         </ul>

@@ -1,0 +1,68 @@
+@switch (state().kind) {
+  @case ('searching') {
+    <h2 aria-live="polite">Buscando conductor…</h2>
+    <p class="app-muted">Estamos conectándote con un conductor cercano. Esto puede tardar hasta 2 minutos.</p>
+    <div
+      class="progress"
+      role="progressbar"
+      aria-label="Tiempo de búsqueda"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="(progress() * 100).toFixed(0)"
+    >
+      <i [style.width.%]="progress() * 100"></i>
+    </div>
+    @if (route(); as r) {
+      <app-route-line [origin]="r.origin" [destination]="r.destination" />
+      <p class="fare">
+        Tarifa estimada <strong class="mono">{{ r.fare | currencyCop }}</strong>
+      </p>
+    }
+    <ion-button expand="block" fill="clear" color="danger" (click)="cancelSearch.emit()">Cancelar solicitud</ion-button>
+  }
+
+  @case ('no-drivers') {
+    <div class="center" role="alert">
+      <span class="badge-icon" aria-hidden="true"><ion-icon name="car-outline" /></span>
+      <h2>No hay conductores disponibles</h2>
+      <p class="app-muted">Nadie aceptó tu solicitud en 2 minutos. Puedes intentarlo de nuevo.</p>
+    </div>
+    @if (route(); as r) {
+      <app-route-line [origin]="r.origin" [destination]="r.destination" />
+    }
+    <div class="actions">
+      <ion-button expand="block" (click)="retry.emit()">Reintentar</ion-button>
+      <ion-button expand="block" fill="clear" color="dark" (click)="dismiss.emit()">Volver al inicio</ion-button>
+    </div>
+  }
+
+  @case ('trip') {
+    @if (trip(); as t) {
+      <div class="trip-head" aria-live="polite">
+        <app-status-pill [status]="t.status" />
+      </div>
+      <div class="driver">
+        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        <div class="who">
+          <strong>{{ t.driver.user.name }}</strong>
+          <span class="rating">
+            <app-rating-stars [value]="t.driver.rating_average" [readonly]="true" style="--star-size: 16px" />
+            <span class="mono">{{ t.driver.rating_average.toFixed(1) }}</span>
+          </span>
+          @if (t.vehicle) {
+            <small class="app-muted">{{ t.vehicle.brand }} {{ t.vehicle.model }} · {{ t.vehicle.color }}</small>
+          }
+        </div>
+        @if (t.vehicle) {
+          <app-plate [value]="t.vehicle.plate" />
+        }
+      </div>
+      @if (route(); as r) {
+        <app-route-line [origin]="r.origin" [destination]="r.destination" />
+      }
+      <p class="fare">
+        Tarifa estimada <strong class="mono">{{ t.estimated_fare | currencyCop }}</strong>
+      </p>
+    }
+  }
+}

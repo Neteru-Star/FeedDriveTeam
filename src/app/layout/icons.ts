@@ -2,6 +2,7 @@ import { addIcons } from 'ionicons';
 import {
   arrowBackOutline,
   carOutline,
+  cashOutline,
   documentTextOutline,
   gridOutline,
   listOutline,
@@ -24,6 +25,7 @@ export function registerAppIcons(): void {
   addIcons({
     'arrow-back-outline': arrowBackOutline,
     'car-outline': carOutline,
+    'cash-outline': cashOutline,
     'document-text-outline': documentTextOutline,
     'grid-outline': gridOutline,
     'list-outline': listOutline,

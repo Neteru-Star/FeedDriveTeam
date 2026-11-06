@@ -2,22 +2,22 @@
 
 ## Plan por fases
 
-| Fase | Nombre                                  | Estado                                          |
-| ---- | --------------------------------------- | ----------------------------------------------- |
-| 0    | Cimientos del proyecto                  | Lista: APK compila, falta abrir en dispositivo  |
-| 1    | Sistema de diseño                       | Lista y aprobada                                |
-| —    | Backend simulado (`mock-api/`)          | Listo: 40 verificaciones en `npm run mock:test` |
-| 2    | Capa de API y autenticación (HU-01)     | Lista: 42 unitarias y 22 E2E                    |
-| 3    | Shell de la aplicación y mapa (HU-02)   | Lista: 72 unitarias y 38 E2E                    |
-| 4    | Cliente: estimar y solicitar viaje      | Siguiente                                       |
-| 5    | Cliente: viaje activo en tiempo real    | Pendiente                                       |
-| 6    | Cliente: historial y calificación       | Pendiente                                       |
-| 7    | Conductor: disponibilidad y solicitudes | Pendiente                                       |
-| 8    | Conductor: ejecución del viaje          | Pendiente                                       |
-| 9    | Admin: dashboard, conductores y tarifas | Pendiente                                       |
-| 10   | Admin: viajes, reportes y auditoría     | Pendiente                                       |
-| 11   | Pulido y calidad                        | Pendiente                                       |
-| 12   | Cierre                                  | Pendiente                                       |
+| Fase | Nombre                                     | Estado                                          |
+| ---- | ------------------------------------------ | ----------------------------------------------- |
+| 0    | Cimientos del proyecto                     | Lista: APK compila, falta abrir en dispositivo  |
+| 1    | Sistema de diseño                          | Lista y aprobada                                |
+| —    | Backend simulado (`mock-api/`)             | Listo: 40 verificaciones en `npm run mock:test` |
+| 2    | Capa de API y autenticación (HU-01)        | Lista: 42 unitarias y 22 E2E                    |
+| 3    | Shell de la aplicación y mapa (HU-02)      | Lista: 72 unitarias y 38 E2E                    |
+| 4    | Cliente: estimar y solicitar viaje (HU-03) | Lista: 91 unitarias y 48 E2E                    |
+| 5    | Cliente: viaje activo en tiempo real       | Siguiente                                       |
+| 6    | Cliente: historial y calificación          | Pendiente                                       |
+| 7    | Conductor: disponibilidad y solicitudes    | Pendiente                                       |
+| 8    | Conductor: ejecución del viaje             | Pendiente                                       |
+| 9    | Admin: dashboard, conductores y tarifas    | Pendiente                                       |
+| 10   | Admin: viajes, reportes y auditoría        | Pendiente                                       |
+| 11   | Pulido y calidad                           | Pendiente                                       |
+| 12   | Cierre                                     | Pendiente                                       |
 
 ## Backlog de features
 
@@ -43,4 +43,6 @@ Detalle en la Tabla 12 de `UberTeam_Historias_y_Mockups_APA.docx`.
 - Sin pagos (HU-07 simulado), sin calificación del conductor al pasajero (HU-08) y sin bloqueo de usuarios (HU-09 gestiona conductores).
 - Sin `/admin/metrics`: el dashboard usa `/admin/dashboard` y `/admin/trips`.
 - `forgot-password` cambia la clave solo con el correo: riesgo de seguridad a informar.
+- El viaje asignado de `/client/active` no trae origen ni destino: la solicitud se guarda en el teléfono (`ActiveRideStorage`) para seguir dibujando la ruta.
+- El backend no vence las solicitudes sin conductor: el frontend las cancela a los 2 minutos.
 - `/auth/me` no trae el perfil del conductor (placa, calificación, aprobación): la tarjeta del conductor muestra solo su nombre por ahora.

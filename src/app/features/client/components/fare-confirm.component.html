@@ -1,0 +1,57 @@
+@if (quote().status === 'error') {
+  <div class="error" role="alert">
+    <span class="error-icon" aria-hidden="true">!</span>
+    <h2>No pudimos calcular la tarifa</h2>
+    <p class="app-muted">{{ errorMessage() }}</p>
+  </div>
+  <app-route-line [origin]="origin()" [destination]="destination()" />
+  <div class="actions">
+    <ion-button expand="block" (click)="retry.emit()">Reintentar</ion-button>
+    <ion-button expand="block" fill="clear" color="dark" (click)="back.emit()">Cambiar destino</ion-button>
+  </div>
+} @else {
+  <h2>Confirma tu viaje</h2>
+  <app-route-line [origin]="origin()" [destination]="destination()" />
+
+  @if (estimate(); as e) {
+    <dl class="stats">
+      <div>
+        <dt>Distancia</dt>
+        <dd class="mono">{{ e.distance_km | distanceKm }}</dd>
+      </div>
+      <div>
+        <dt>Tiempo</dt>
+        <dd class="mono">{{ e.duration_min | duration }}</dd>
+      </div>
+      <div>
+        <dt>Tarifa</dt>
+        <dd class="mono">{{ e.estimated_fare | currencyCop }}</dd>
+      </div>
+    </dl>
+    <details class="breakdown">
+      <summary>Ver desglose</summary>
+      <app-fare-display [total]="e.estimated_fare" [surge]="surge()" [breakdown]="breakdown()" />
+    </details>
+  } @else {
+    <div class="stats loading" aria-busy="true" aria-label="Calculando la tarifa">
+      <ion-skeleton-text [animated]="true" />
+      <ion-skeleton-text [animated]="true" />
+      <ion-skeleton-text [animated]="true" />
+    </div>
+  }
+
+  <div class="payment">
+    <ion-icon name="cash-outline" aria-hidden="true" />
+    <span>Efectivo</span>
+    <small class="app-muted">El pago se elige al terminar el viaje</small>
+  </div>
+
+  <div class="actions">
+    <ion-button expand="block" [disabled]="!estimate() || requesting()" (click)="confirm.emit()">
+      {{ requesting() ? 'Solicitando…' : 'Solicitar viaje' }}
+    </ion-button>
+    <ion-button expand="block" fill="clear" color="dark" [disabled]="requesting()" (click)="back.emit()">
+      Cambiar origen o destino
+    </ion-button>
+  </div>
+}

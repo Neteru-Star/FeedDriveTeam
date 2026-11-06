@@ -1,5 +1,16 @@
 # Changelog
 
+## Fase 4: Tarifa y solicitud del viaje (HU-03)
+
+- Tarifa estimada (`POST /client/estimate-fare`) con distancia, tiempo y precio, desglose en barras que siempre suma la tarifa oficial y chip de alta demanda según `GET /fares/active`.
+- Error de estimación con reintento; la tarifa se recalcula si cambia la ruta.
+- Solicitud del viaje (`POST /client/ride-requests`) y espera del conductor con consulta de `GET /client/active` cada 5 s, pausada en segundo plano.
+- Límite de 2 minutos: la solicitud se cancela y se ofrece reintentar; si un conductor acepta en el último segundo, se conserva el viaje.
+- El 400 de "ya tienes un viaje activo" abre ese viaje; la solicitud en curso se retoma al reabrir la app.
+- Tarjeta del conductor asignado con calificación, vehículo, placa y posición en el mapa.
+- Pipes `currencyCop`, `distanceKm` y `duration`; los montos ya no muestran centavos.
+- Pruebas: stores con reloj simulado (secuencia de estados, límite, carrera al cancelar, 400 y 422), API del pasajero y E2E con conductores reales aceptando la solicitud.
+
 ## Fase 3: Estructura por rol y mapa (HU-02)
 
 - Estructura de cada rol con menú lateral: pasajero y conductor con el mapa a pantalla completa; administrador con el menú fijo en escritorio (`ion-split-pane`) y secciones de las Fases 9 y 10 como estados vacíos.

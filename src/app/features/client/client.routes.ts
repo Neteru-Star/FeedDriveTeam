@@ -2,6 +2,8 @@ import type { Routes } from '@angular/router';
 import { RoleShellComponent, type ShellData } from '@layout/role-shell.component';
 import type { SectionData } from '@layout/section-placeholder.page';
 
+import { ActiveRideStore } from './data-access/active-ride.store';
+import { FareQuoteStore } from './data-access/fare-quote.store';
 import { TripDraftStore } from './data-access/trip-draft.store';
 
 const shell: ShellData = {
@@ -24,8 +26,8 @@ export const CLIENT_ROUTES: Routes = [
     path: '',
     component: RoleShellComponent,
     data: shell,
-    // El borrador del viaje vive mientras el pasajero tenga la sesión abierta.
-    providers: [TripDraftStore],
+    // Estado del pasajero: vive mientras tenga la sesión abierta y se descarta al cerrarla.
+    providers: [TripDraftStore, FareQuoteStore, ActiveRideStore],
     children: [
       { path: '', loadComponent: () => import('./pages/client-home.page').then((m) => m.ClientHomePage) },
       {

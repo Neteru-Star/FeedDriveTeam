@@ -1,8 +1,8 @@
-<app-map-page [sheetLabel]="picking() ? 'Elegir en el mapa' : 'Planear viaje'">
+<app-map-page [sheetLabel]="sheetLabel()">
   <app-map
     [center]="center()"
     [markers]="markers()"
-    [route]="picking() ? null : draft.route()"
+    [route]="mapRoute()"
     [fitPadding]="routePadding"
     (mapClick)="onMapClick($event)"
     (moveEnd)="onMoveEnd($event)"
@@ -25,14 +25,21 @@
     </button>
   </div>
 
-  @if (showNotice() && !picking()) {
+  @if (showNotice() && !picking() && !rideActive()) {
   <app-location-notice overlay [status]="location.status()" (retry)="locate()" />
   } @if (picking()) {
   <div overlay class="pin" aria-hidden="true">
     <span class="pin-head" [class.origin]="picking() === 'origin'"></span>
     <span class="pin-shadow"></span>
   </div>
-  } @if (picking(); as kind) {
+  } @if (rideActive()) {
+  <app-ride-status
+    [state]="ride.state()"
+    (cancelSearch)="ride.cancelSearch()"
+    (retry)="retryRide()"
+    (dismiss)="ride.dismiss()"
+  />
+  } @else if (picking(); as kind) {
   <h2>{{ kind === 'origin' ? 'Elige el punto de partida' : 'Elige el destino' }}</h2>
   <p class="app-muted hint">Mueve el mapa o toca un punto para dejar el pin donde quieres.</p>
   <div class="picked" aria-live="polite">
@@ -47,8 +54,23 @@
   <ion-button expand="block" (click)="confirmPick()">
     {{ kind === 'origin' ? 'Confirmar partida' : 'Confirmar destino' }}
   </ion-button>
+  } @else if (step() === 'confirm' && draft.origin() && draft.destination()) {
+  <app-fare-confirm
+    [quote]="quote()"
+    [origin]="draft.origin()!.label"
+    [destination]="draft.destination()!.label"
+    [requesting]="ride.state().kind === 'requesting'"
+    (confirm)="requestRide()"
+    (retry)="retryEstimate()"
+    (back)="step.set('plan')"
+  />
   } @else {
-  <h2>¿A dónde vas?</h2>
+  <div class="plan-head">
+    <h2>¿A dónde vas?</h2>
+    @if (fares.surge() > 1) {
+    <span class="surge">Alta demanda ×{{ fares.surge() }}</span>
+    }
+  </div>
   <app-place-search
     [originLabel]="draft.origin()?.label ?? ''"
     [destinationLabel]="draft.destination()?.label ?? ''"
@@ -60,6 +82,7 @@
   <div class="summary">
     <app-route-line [origin]="draft.origin()!.label" [destination]="draft.destination()!.label" />
     <p class="app-muted">Distancia en línea recta: <strong>{{ distance() }}</strong></p>
+    <ion-button expand="block" (click)="showFare()">Ver tarifa</ion-button>
   </div>
   } }
 </app-map-page>
