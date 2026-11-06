@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { provideRouter } from '@angular/router';
+import { NavController } from '@ionic/angular/nav-controller';
 import { ToastService } from '@shared/ui/toast/toast.service';
 
 import { AuthApi } from './auth.api';
@@ -34,10 +35,9 @@ describe('AuthStore', () => {
         { provide: AuthApi, useValue: api },
         { provide: TokenStorage, useValue: storage },
         { provide: ToastService, useValue: toast },
+        { provide: NavController, useValue: { navigateRoot: vi.fn().mockResolvedValue(true) } },
       ],
     });
-    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     return TestBed.inject(AuthStore);
   }
 

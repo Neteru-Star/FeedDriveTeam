@@ -1,0 +1,65 @@
+<app-map-page [sheetLabel]="picking() ? 'Elegir en el mapa' : 'Planear viaje'">
+  <app-map
+    [center]="center()"
+    [markers]="markers()"
+    [route]="picking() ? null : draft.route()"
+    [fitPadding]="routePadding"
+    (mapClick)="onMapClick($event)"
+    (moveEnd)="onMoveEnd($event)"
+  />
+
+  <div top class="top">
+    @if (picking()) {
+    <button type="button" class="fd-fab" aria-label="Volver" (click)="cancelPicking()">
+      <ion-icon name="arrow-back-outline" aria-hidden="true" />
+    </button>
+    } @else {
+    <ion-menu-toggle menu="pasajero" [autoHide]="false">
+      <button type="button" class="fd-fab" aria-label="Abrir menú">
+        <ion-icon name="menu-outline" aria-hidden="true" />
+      </button>
+    </ion-menu-toggle>
+    }
+    <button type="button" class="fd-fab" aria-label="Centrar en mi ubicación" (click)="recenter()">
+      <ion-icon name="locate-outline" aria-hidden="true" />
+    </button>
+  </div>
+
+  @if (showNotice() && !picking()) {
+  <app-location-notice overlay [status]="location.status()" (retry)="locate()" />
+  } @if (picking()) {
+  <div overlay class="pin" aria-hidden="true">
+    <span class="pin-head" [class.origin]="picking() === 'origin'"></span>
+    <span class="pin-shadow"></span>
+  </div>
+  } @if (picking(); as kind) {
+  <h2>{{ kind === 'origin' ? 'Elige el punto de partida' : 'Elige el destino' }}</h2>
+  <p class="app-muted hint">Mueve el mapa o toca un punto para dejar el pin donde quieres.</p>
+  <div class="picked" aria-live="polite">
+    <ion-icon name="location-outline" aria-hidden="true" />
+    <span>
+      <strong>{{ pickedPlace()?.label ?? 'Buscando la dirección…' }}</strong>
+      @if (pickedPlace()?.detail) {
+      <small>{{ pickedPlace()?.detail }}</small>
+      }
+    </span>
+  </div>
+  <ion-button expand="block" (click)="confirmPick()">
+    {{ kind === 'origin' ? 'Confirmar partida' : 'Confirmar destino' }}
+  </ion-button>
+  } @else {
+  <h2>¿A dónde vas?</h2>
+  <app-place-search
+    [originLabel]="draft.origin()?.label ?? ''"
+    [destinationLabel]="draft.destination()?.label ?? ''"
+    [near]="searchNear()"
+    (selected)="select($event.kind, $event.place)"
+    (pickOnMap)="startPicking($event)"
+  />
+  @if (draft.route() && draft.origin() && draft.destination()) {
+  <div class="summary">
+    <app-route-line [origin]="draft.origin()!.label" [destination]="draft.destination()!.label" />
+    <p class="app-muted">Distancia en línea recta: <strong>{{ distance() }}</strong></p>
+  </div>
+  } }
+</app-map-page>

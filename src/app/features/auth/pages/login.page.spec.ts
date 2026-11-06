@@ -1,20 +1,25 @@
-import { Router, provideRouter } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { AuthStore } from '@core/auth/auth.store';
 import { ApiError } from '@core/http/api-error';
+import { NavController } from '@ionic/angular/nav-controller';
 import { render, screen } from '@testing-library/angular';
 
 import { LoginPage } from './login.page';
 
 describe('LoginPage', () => {
   const store = { login: vi.fn() };
+  const nav = { navigateRoot: vi.fn().mockResolvedValue(true) };
 
   async function setup(inputs: Record<string, unknown> = {}) {
     const view = await render(LoginPage, {
       inputs,
-      providers: [provideRouter([]), { provide: AuthStore, useValue: store }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthStore, useValue: store },
+        { provide: NavController, useValue: nav },
+      ],
     });
-    const navigate = vi.spyOn(view.fixture.debugElement.injector.get(Router), 'navigateByUrl').mockResolvedValue(true);
-    return { ...view, navigate };
+    return { ...view, navigate: nav.navigateRoot };
   }
 
   function fill(fixture: Awaited<ReturnType<typeof setup>>['fixture'], login: string, password: string) {
@@ -24,7 +29,10 @@ describe('LoginPage', () => {
 
   const submit = (container: Element) => container.querySelector('form')!.dispatchEvent(new Event('submit'));
 
-  beforeEach(() => store.login.mockReset());
+  beforeEach(() => {
+    store.login.mockReset();
+    nav.navigateRoot.mockClear();
+  });
 
   it('does not call the API while fields are empty', async () => {
     const { container } = await setup();
@@ -36,7 +44,11 @@ describe('LoginPage', () => {
     // Un vi.fn que devuelve una promesa rechazada hace fallar la prueba aunque la página la atrape.
     const failing = { login: () => Promise.reject(new ApiError(401, 'Credenciales inválidas')) };
     const { container, fixture } = await render(LoginPage, {
-      providers: [provideRouter([]), { provide: AuthStore, useValue: failing }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthStore, useValue: failing },
+        { provide: NavController, useValue: nav },
+      ],
     });
     fill(fixture as never, 'cliente@uber.com', 'mala');
 

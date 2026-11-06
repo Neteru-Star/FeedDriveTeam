@@ -1,0 +1,61 @@
+<div class="fields">
+  <label class="field">
+    <span class="mark origin" aria-hidden="true"></span>
+    <input
+      type="text"
+      aria-label="Punto de partida"
+      placeholder="Escribe tu punto de partida"
+      autocomplete="off"
+      [value]="originText()"
+      (input)="type('origin', $event)"
+      (focus)="focus('origin')"
+    />
+  </label>
+  <label class="field">
+    <span class="mark destination" aria-hidden="true"></span>
+    <input
+      type="text"
+      aria-label="Destino"
+      placeholder="¿A dónde vas?"
+      autocomplete="off"
+      [value]="destinationText()"
+      (input)="type('destination', $event)"
+      (focus)="focus('destination')"
+    />
+  </label>
+</div>
+
+@if (active(); as kind) {
+  <ul class="results" [attr.aria-label]="kind === 'origin' ? 'Sugerencias de partida' : 'Sugerencias de destino'">
+    @if (search().loading) {
+      <li class="status" aria-live="polite">Buscando direcciones…</li>
+    }
+    @for (place of search().places; track $index) {
+      <li>
+        <button type="button" (click)="choose(place)">
+          <ion-icon name="location-outline" aria-hidden="true" />
+          <span>
+            <strong>{{ place.label }}</strong>
+            @if (place.detail) {
+              <small>{{ place.detail }}</small>
+            }
+          </span>
+        </button>
+      </li>
+    }
+    @if (search().failed) {
+      <li class="status" aria-live="polite">No pudimos buscar direcciones. Revisa tu conexión.</li>
+    } @else if (!search().loading && typedEnough() && search().places.length === 0) {
+      <li class="status" aria-live="polite">No encontramos esa dirección. Prueba con otra o elígela en el mapa.</li>
+    }
+    <li>
+      <button type="button" (click)="chooseOnMap()">
+        <ion-icon name="map-outline" aria-hidden="true" />
+        <span>
+          <strong>Elegir en el mapa</strong>
+          <small>Toca un punto para fijar {{ kind === 'origin' ? 'la partida' : 'el destino' }}</small>
+        </span>
+      </button>
+    </li>
+  </ul>
+}

@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { ROLE_HOME } from '@core/auth/auth.models';
 import { AuthStore } from '@core/auth/auth.store';
 import { ApiError } from '@core/http/api-error';
 import { IonButton } from '@ionic/angular/ion-button';
+import { NavController } from '@ionic/angular/nav-controller';
 import { applyServerErrors } from '@shared/forms/server-errors';
 import { TextFieldComponent } from '@shared/ui/text-field/text-field.component';
 
@@ -73,7 +74,7 @@ import { AuthLayoutComponent } from '../ui/auth-layout.component';
 })
 export class LoginPage {
   private readonly store = inject(AuthStore);
-  private readonly router = inject(Router);
+  private readonly nav = inject(NavController);
 
   /** Query params (withComponentInputBinding). */
   readonly returnUrl = input<string>();
@@ -93,7 +94,8 @@ export class LoginPage {
     this.error.set('');
     try {
       const user = await this.store.login({ ...this.form.getRawValue(), login: this.form.value.login?.trim() ?? '' });
-      await this.router.navigateByUrl(this.safeReturnUrl() ?? ROLE_HOME[user.role]);
+      // Raíz nueva: el botón atrás no vuelve al login.
+      await this.nav.navigateRoot(this.safeReturnUrl() ?? ROLE_HOME[user.role]);
     } catch (e) {
       this.error.set(this.messageFor(e));
     } finally {

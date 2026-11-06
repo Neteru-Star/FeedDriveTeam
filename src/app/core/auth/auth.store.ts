@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { NavController } from '@ionic/angular/nav-controller';
 import { ToastService } from '@shared/ui/toast/toast.service';
 
 import { AuthApi } from './auth.api';
@@ -24,6 +25,8 @@ export class AuthStore {
   private readonly api = inject(AuthApi);
   private readonly storage = inject(TokenStorage);
   private readonly router = inject(Router);
+  // navigateRoot vacía la pila de páginas de Ionic: el shell del rol anterior no queda vivo en segundo plano.
+  private readonly nav = inject(NavController);
   private readonly toast = inject(ToastService);
 
   private readonly session = signal<StoredSession | null>(null);
@@ -69,7 +72,7 @@ export class AuthStore {
     const token = this.token();
     await this.clear();
     if (token) await this.api.logout(token).catch(() => undefined);
-    await this.router.navigateByUrl('/login');
+    await this.nav.navigateRoot('/login');
   }
 
   /** Cierra la sesión porque el token venció o el backend lo rechazó (401). */
@@ -78,7 +81,7 @@ export class AuthStore {
     await this.clear();
     void this.toast.error('Tu sesión expiró. Inicia sesión de nuevo.');
     const keep = returnUrl && returnUrl !== '/login' ? { returnUrl } : {};
-    await this.router.navigate(['/login'], { queryParams: keep });
+    await this.nav.navigateRoot(['/login'], { queryParams: keep });
   }
 
   private async open(response: AuthResponse): Promise<void> {

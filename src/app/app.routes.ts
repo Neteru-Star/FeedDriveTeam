@@ -1,11 +1,8 @@
-import { inject, type Type } from '@angular/core';
+import { inject } from '@angular/core';
 import type { Routes } from '@angular/router';
 import { guestGuard, roleGuard } from '@core/auth/auth.guards';
 import { AuthStore } from '@core/auth/auth.store';
 import { environment } from '@env/environment';
-
-const roleHome = (): Promise<Type<unknown>> =>
-  import('./features/home/pages/role-home.page').then((m) => m.RoleHomePage);
 
 export const routes: Routes = [
   // La raíz lleva al inicio del rol, o al login si no hay sesión.
@@ -27,9 +24,21 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/pages/forgot-password.page').then((m) => m.ForgotPasswordPage),
   },
 
-  { path: 'pasajero', canActivate: [roleGuard('client')], loadComponent: roleHome },
-  { path: 'conductor', canActivate: [roleGuard('driver')], loadComponent: roleHome },
-  { path: 'admin', canActivate: [roleGuard('admin')], loadComponent: roleHome },
+  {
+    path: 'pasajero',
+    canActivate: [roleGuard('client')],
+    loadChildren: () => import('./features/client/client.routes').then((m) => m.CLIENT_ROUTES),
+  },
+  {
+    path: 'conductor',
+    canActivate: [roleGuard('driver')],
+    loadChildren: () => import('./features/driver/driver.routes').then((m) => m.DRIVER_ROUTES),
+  },
+  {
+    path: 'admin',
+    canActivate: [roleGuard('admin')],
+    loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
+  },
 
   {
     path: 'acceso-denegado',

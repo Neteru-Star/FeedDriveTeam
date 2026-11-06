@@ -1,30 +1,28 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-// Usuarios de prueba del backend simulado (mock-api/server.mjs).
-const USERS = {
-  client: { login: 'cliente@uber.com', password: 'cliente123', home: '/pasajero', name: 'Juan' },
-  driver: { login: '3119876543', password: 'conductor123', home: '/conductor', name: 'Carlos' },
-  admin: { login: 'admin@uber.com', password: 'admin123', home: '/admin', name: 'Admin' },
+import { USERS, login, logout, mockMapServices } from './support';
+
+test.beforeEach(({ page }) => mockMapServices(page));
+
+// Lo que identifica la pantalla inicial de cada rol.
+const HOME_MARK = {
+  client: { url: /\/pasajero$/, text: '¿A dónde vas?' },
+  driver: { url: /\/conductor$/, text: 'Estás fuera de línea' },
+  admin: { url: /\/admin\/dashboard$/, text: 'Métricas de la plataforma' },
 };
-
-async function login(page: Page, user: string, password: string) {
-  await page.goto('/login');
-  await page.getByLabel('Correo o teléfono').fill(user);
-  await page.getByLabel('Contraseña').fill(password);
-  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-}
 
 for (const [role, user] of Object.entries(USERS)) {
   test(`logs in as ${role} and keeps the session after reloading`, async ({ page }) => {
+    const mark = HOME_MARK[role as keyof typeof HOME_MARK];
     await login(page, user.login, user.password);
 
-    await expect(page).toHaveURL(new RegExp(`${user.home}$`));
-    await expect(page.getByRole('heading', { name: `Hola, ${user.name}` })).toBeVisible();
+    await expect(page).toHaveURL(mark.url);
+    await expect(page.getByRole('heading', { name: mark.text })).toBeVisible();
 
     await page.reload();
-    await expect(page.getByRole('heading', { name: `Hola, ${user.name}` })).toBeVisible();
+    await expect(page.getByRole('heading', { name: mark.text })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click();
+    await logout(page, user.home);
     await expect(page).toHaveURL(/\/login$/);
   });
 }
@@ -93,7 +91,8 @@ test('registers a passenger and then logs in', async ({ page }) => {
   await loginPage.getByLabel('Correo o teléfono').fill(email);
   await loginPage.getByLabel('Contraseña').fill('clave1234');
   await loginPage.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page.getByRole('heading', { name: 'Hola, Laura' })).toBeVisible();
+  await expect(page).toHaveURL(/\/pasajero$/);
+  await expect(page.getByRole('heading', { name: '¿A dónde vas?' })).toBeVisible();
 });
 
 test('registers a driver in two steps', async ({ page }) => {

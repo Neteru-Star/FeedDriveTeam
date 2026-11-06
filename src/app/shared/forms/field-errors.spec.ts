@@ -18,6 +18,17 @@ describe('fieldErrorMessage', () => {
     expect(fieldErrorMessage(control.errors)).toBe('Debe tener al menos 8 caracteres.');
   });
 
+  it('covers the length, range, format and app-specific errors', () => {
+    expect(fieldErrorMessage({ maxlength: { requiredLength: 50 } })).toBe('No debe superar 50 caracteres.');
+    expect(fieldErrorMessage({ min: { min: 1990 } })).toBe('El valor mínimo es 1990.');
+    expect(fieldErrorMessage({ max: { max: 8 } })).toBe('El valor máximo es 8.');
+    expect(fieldErrorMessage({ pattern: true })).toBe('El formato no es válido.');
+    expect(fieldErrorMessage({ phone: true })).toContain('10 dígitos');
+    expect(fieldErrorMessage({ plate: true })).toContain('placa');
+    expect(fieldErrorMessage({ mismatch: true })).toBe('Las contraseñas no coinciden.');
+    expect(fieldErrorMessage({ unknown: true })).toBe('Revisa este campo.');
+  });
+
   it('prefers the message sent by the backend', () => {
     expect(fieldErrorMessage({ [SERVER_ERROR]: 'El correo ya está en uso.', required: true })).toBe(
       'El correo ya está en uso.',
