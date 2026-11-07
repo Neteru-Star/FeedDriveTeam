@@ -1,5 +1,14 @@
 # Changelog
 
+## Fases 11 y 12: Pulido y cierre
+
+- Auditoría de accesibilidad automatizada con axe (WCAG 2.1 AA) en las pantallas de los tres roles, en móvil y escritorio, sin infracciones graves ni críticas.
+- Contraste corregido: texto secundario a 5:1, rojo de peligro más oscuro, estados y etiquetas mezclados con la tinta y la marca "Drive" como resaltado.
+- Tablas del administrador desplazables con el teclado.
+- Botón "atrás" de Android: Ionic cierra menús y modales y vuelve en la navegación; si no puede, regresa a la pantalla inicial del rol o minimiza la app.
+- Ícono adaptativo y pantalla de inicio (claro y oscuro) generados con `@capacitor/assets` desde `assets/`.
+- Documentación: arquitectura y cómo añadir una feature, guía de despliegue (web y APK) y lista final de brechas del backend en `docs/`.
+
 ## Fases 9 y 10: Panel del administrador (HU-09)
 
 - Dashboard con indicadores (ingresos, viajes activos y cancelados, pasajeros, conductores y por aprobar), viajes recientes e incidencias; cada indicador lleva a su listado filtrado.

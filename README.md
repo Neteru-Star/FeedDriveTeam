@@ -82,6 +82,12 @@ Con `npm run mock:api:auto`, Carlos se vuelve un conductor automático: acepta c
 | `npm run test:coverage` | Pruebas unitarias con cobertura                                                             |
 | `npm run e2e`           | Pruebas E2E en móvil y escritorio, contra el mock (levanta la API en 8000 y la app en 4300) |
 
+## Documentación
+
+- [Arquitectura y cómo añadir una feature](docs/ARQUITECTURA.md)
+- [Guía de despliegue](docs/DESPLIEGUE.md)
+- [Brechas del backend y sus soluciones](docs/BRECHAS_BACKEND.md)
+
 ## Decisiones
 
 - **Estado:** signals en servicios store por feature, sin NgRx SignalStore, porque cada feature tiene un flujo lineal y pocas entidades.

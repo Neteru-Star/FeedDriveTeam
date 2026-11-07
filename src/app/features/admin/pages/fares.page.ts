@@ -37,7 +37,7 @@ const SAMPLES = [
     <app-page-header title="Tarifas" />
     <ion-content>
       <main class="adm-page">
-        <div class="adm-table-wrap">
+        <div class="adm-table-wrap" tabindex="0" role="region" aria-label="Tabla de tarifas">
           <table class="adm-table">
             <thead>
               <tr>

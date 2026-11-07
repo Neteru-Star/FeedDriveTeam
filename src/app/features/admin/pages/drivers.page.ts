@@ -52,7 +52,7 @@ const VERB: Record<ApprovalStatus, string> = {
             </button>
           }
         </div>
-        <div class="adm-table-wrap">
+        <div class="adm-table-wrap" tabindex="0" role="region" aria-label="Tabla de conductores">
           <table class="adm-table">
             <thead>
               <tr>

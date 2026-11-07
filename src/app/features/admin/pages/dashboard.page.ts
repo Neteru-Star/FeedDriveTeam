@@ -96,7 +96,9 @@ import type { Dashboard } from '../data-access/admin.models';
                     </li>
                   }
                 </ul>
-                <ion-button fill="clear" size="small" routerLink="/admin/viajes">Ver todos los viajes</ion-button>
+                <ion-button fill="clear" color="dark" size="small" routerLink="/admin/viajes"
+                  >Ver todos los viajes</ion-button
+                >
               } @else {
                 <p class="adm-empty">Aún no hay viajes.</p>
               }

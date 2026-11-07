@@ -18,7 +18,8 @@ import { TRIP_STATUS, type TripStatus } from '@shared/models/trip-status';
       border-radius: 999px;
       font-size: 13px;
       font-weight: 600;
-      color: var(--tone);
+      /* El texto mezcla el tono con la tinta para cumplir 4,5:1 en claro y en oscuro. */
+      color: color-mix(in srgb, var(--tone) 62%, var(--color-ink));
       background: color-mix(in srgb, var(--tone) 14%, transparent);
     }
     .dot {

@@ -53,7 +53,7 @@
   }
 
   &[data-mode='review'] {
-    color: var(--color-warning);
+    color: color-mix(in srgb, var(--color-warning) 55%, var(--color-ink));
     background: color-mix(in srgb, var(--color-warning) 15%, transparent);
   }
 }

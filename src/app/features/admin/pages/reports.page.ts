@@ -79,7 +79,7 @@ import { APPROVAL_LABEL, type Report } from '../data-access/admin.models';
           </div>
 
           <h2 class="table-title">Desempeño de conductores</h2>
-          <div class="adm-table-wrap">
+          <div class="adm-table-wrap" tabindex="0" role="region" aria-label="Tabla de desempeño de conductores">
             <table class="adm-table">
               <thead>
                 <tr>

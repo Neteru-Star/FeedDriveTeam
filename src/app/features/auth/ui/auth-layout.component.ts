@@ -65,8 +65,13 @@ import { GlassCardComponent } from '@shared/ui/glass-card/glass-card.component';
       font-weight: 700;
       letter-spacing: -0.03em;
     }
+    /* Resaltado en lugar de texto verde: el verde claro no tiene contraste suficiente como color de letra. */
     .brand b {
-      color: var(--color-primary-strong);
+      margin-left: 2px;
+      padding: 0 6px;
+      border-radius: 8px;
+      color: #0f1a14;
+      background: var(--color-primary);
     }
     .back {
       display: grid;

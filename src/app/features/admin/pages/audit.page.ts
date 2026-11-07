@@ -30,7 +30,7 @@ const normalize = (text: string): string => text.normalize('NFD').replace(/[̀-�
             />
           </label>
         </div>
-        <div class="adm-table-wrap">
+        <div class="adm-table-wrap" tabindex="0" role="region" aria-label="Tabla de auditoría">
           <table class="adm-table">
             <thead>
               <tr>

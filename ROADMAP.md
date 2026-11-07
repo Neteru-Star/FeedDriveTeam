@@ -16,8 +16,8 @@
 | 8    | Conductor: ejecución del viaje             | Lista: 158 unitarias y 78 E2E                   |
 | 9    | Admin: dashboard, conductores y tarifas    | Lista                                           |
 | 10   | Admin: viajes, reportes y auditoría        | Lista: 164 unitarias y 90 E2E                   |
-| 11   | Pulido y calidad                           | Siguiente                                       |
-| 12   | Cierre                                     | Pendiente                                       |
+| 11   | Pulido y calidad                           | Lista: axe sin infracciones graves              |
+| 12   | Cierre                                     | Lista: `docs/`                                  |
 
 ## Backlog de features
 
@@ -36,6 +36,8 @@
 - Nominatim y las teselas de OpenStreetMap son servicios comunitarios con límites de uso (1 búsqueda por segundo, uso moderado de teselas). Sirven para el curso; para publicar la app habría que usar un proveedor propio.
 
 ## Brechas del backend (resueltas en el frontend)
+
+Lista final con la ubicación de cada solución: [docs/BRECHAS_BACKEND.md](docs/BRECHAS_BACKEND.md).
 
 Detalle en la Tabla 12 de `UberTeam_Historias_y_Mockups_APA.docx`.
 

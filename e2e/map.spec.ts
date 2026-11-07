@@ -86,8 +86,8 @@ test('navigates the admin sections from the side menu', async ({ page }, testInf
 
   // En escritorio el menú está fijo (ion-split-pane); en el celular se abre con el botón.
   if (testInfo.project.name === 'Mobile') await page.getByRole('button', { name: 'menu' }).click();
-  await page.getByRole('link', { name: 'Conductores' }).click();
+  await page.getByRole('link', { name: 'Conductores', exact: true }).click();
 
   await expect(page).toHaveURL(/\/admin\/conductores$/);
-  await expect(page.getByRole('heading', { name: 'Conductores registrados' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Licencia' })).toBeVisible();
 });

@@ -58,7 +58,7 @@ import type { AdminTrip, Page, TripFilters } from '../data-access/admin.models';
           <ion-button fill="clear" color="dark" (click)="clear()">Limpiar</ion-button>
         </form>
 
-        <div class="adm-table-wrap">
+        <div class="adm-table-wrap" tabindex="0" role="region" aria-label="Tabla de viajes">
           <table class="adm-table">
             <thead>
               <tr>
@@ -109,7 +109,11 @@ import type { AdminTrip, Page, TripFilters } from '../data-access/admin.models';
           </table>
         </div>
         <nav class="adm-pager" aria-label="Páginas">
-          <ion-button fill="clear" [disabled]="result().page <= 1" (click)="apply({ page: result().page - 1 })"
+          <ion-button
+            fill="clear"
+            color="dark"
+            [disabled]="result().page <= 1"
+            (click)="apply({ page: result().page - 1 })"
             >Anterior</ion-button
           >
           <span>
@@ -120,6 +124,7 @@ import type { AdminTrip, Page, TripFilters } from '../data-access/admin.models';
           </span>
           <ion-button
             fill="clear"
+            color="dark"
             [disabled]="result().page >= result().lastPage"
             (click)="apply({ page: result().page + 1 })"
           >
