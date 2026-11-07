@@ -37,7 +37,8 @@
               "node_modules/leaflet/dist/leaflet.css",
               "src/global.scss",
               "src/theme/variables.scss",
-              "src/theme/map.scss"
+              "src/theme/map.scss",
+              "src/theme/admin.scss"
             ],
             "allowedCommonJsDependencies": ["leaflet"],
             "scripts": [],

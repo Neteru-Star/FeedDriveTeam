@@ -8,7 +8,7 @@ test.beforeEach(({ page }) => mockMapServices(page));
 const HOME_MARK = {
   client: { url: /\/pasajero$/, text: '¿A dónde vas?' },
   driver: { url: /\/conductor$/, text: 'Estás fuera de línea' },
-  admin: { url: /\/admin\/dashboard$/, text: 'Métricas de la plataforma' },
+  admin: { url: /\/admin\/dashboard$/, text: 'Viajes recientes' },
 };
 
 for (const [role, user] of Object.entries(USERS)) {

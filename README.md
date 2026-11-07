@@ -31,6 +31,16 @@ npx cap open android
 
 Gradle 8.14 exige un JDK 21 y no funciona con el JDK 25 de Android Studio. Selecciónalo en **Settings → Build Tools → Gradle → Gradle JDK**.
 
+### APK para probar en el celular
+
+```bash
+npm run apk                      # backend simulado en este computador (toma la IP del Wi-Fi)
+npm run apk -- mock 192.168.1.20 # backend simulado en otra IP
+npm run apk -- real              # backend del profesor
+```
+
+El APK queda en `dist/FeedDrive-<destino>.apk`. Con el backend simulado, el celular debe estar en la misma red Wi-Fi que el computador y `npm run mock:api` debe estar corriendo. Si la red no deja que los dispositivos se vean (redes de campus), usa el hotspot del celular y vuelve a compilar.
+
 ## API
 
 La URL se configura en `apiBaseUrl`, dentro de `src/environments/environment.ts` y `environment.prod.ts`. Para otro servidor, cambia ese valor; en un dispositivo físico no se puede usar `localhost`.

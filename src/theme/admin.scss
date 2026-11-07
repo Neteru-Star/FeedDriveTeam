@@ -1,0 +1,269 @@
+// Panel del administrador: estilos compartidos por sus pantallas (tablas, tarjetas, filtros y KPIs).
+
+.adm-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 8px 16px 40px;
+}
+
+.adm-intro {
+  margin: 0 0 16px;
+  color: var(--color-muted);
+}
+
+.adm-card {
+  padding: 16px;
+  border: 1px solid var(--color-card-border);
+  border-radius: 18px;
+  background: var(--color-card);
+
+  h2 {
+    margin: 0 0 12px;
+    font-size: 16px;
+  }
+}
+
+.adm-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-top: 14px;
+}
+
+// Indicadores clave (bento)
+.adm-kpis {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.adm-kpi {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-card-border);
+  border-radius: 18px;
+  background: var(--color-card);
+  color: inherit;
+  text-decoration: none;
+
+  span {
+    font-size: 13px;
+    color: var(--color-muted);
+  }
+
+  strong {
+    font-family: var(--font-mono, monospace);
+    font-size: 26px;
+  }
+
+  small {
+    font-size: 12px;
+    color: var(--color-muted);
+  }
+
+  &.wide {
+    grid-column: span 2;
+  }
+
+  &.accent {
+    background: var(--color-primary);
+    color: #0f1a14;
+
+    span,
+    small {
+      color: #0f1a14;
+    }
+  }
+
+  &.warn strong {
+    color: var(--color-warning);
+  }
+}
+
+// Filtros
+.adm-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 14px;
+
+  label {
+    display: grid;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+
+  input,
+  select {
+    min-height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--color-card-border);
+    border-radius: 10px;
+    font: inherit;
+    color: var(--color-ink);
+    background: var(--color-surface);
+  }
+}
+
+.adm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+
+  button {
+    padding: 6px 14px;
+    border: 1px solid var(--color-card-border);
+    border-radius: 999px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--color-ink);
+    background: var(--color-card);
+    cursor: pointer;
+
+    &[aria-pressed='true'] {
+      border-color: var(--color-primary-strong);
+      background: var(--color-primary);
+      color: #0f1a14;
+      font-weight: 600;
+    }
+  }
+}
+
+// Tablas (en el celular se desplazan horizontalmente)
+.adm-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-card-border);
+  border-radius: 18px;
+  background: var(--color-card);
+}
+
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--color-card-border);
+  }
+
+  th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .num {
+    text-align: right;
+    font-family: var(--font-mono, monospace);
+    white-space: nowrap;
+  }
+
+  small {
+    display: block;
+    color: var(--color-muted);
+  }
+}
+
+.adm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.adm-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--color-muted);
+  background: color-mix(in srgb, var(--color-ink) 7%, transparent);
+
+  &[data-status='approved'],
+  &[data-status='active'] {
+    color: #0f1a14;
+    background: var(--color-primary);
+  }
+
+  &[data-status='pending'] {
+    color: var(--color-warning);
+    background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  }
+
+  &[data-status='suspended'],
+  &[data-status='rejected'] {
+    color: var(--color-danger);
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  }
+}
+
+// Barras horizontales (reportes)
+.adm-bars {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    gap: 4px;
+    font-size: 14px;
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .track {
+    height: 10px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--color-ink) 7%, transparent);
+    overflow: hidden;
+  }
+
+  .fill {
+    height: 100%;
+    border-radius: 6px;
+    background: var(--color-primary-strong);
+  }
+}
+
+.adm-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.adm-form {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.adm-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-muted);
+}

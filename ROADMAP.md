@@ -14,9 +14,9 @@
 | 6    | Cliente: historial y calificación          | Lista: 125 unitarias y 62 E2E                   |
 | 7    | Conductor: disponibilidad y solicitudes    | Lista: 143 unitarias y 70 E2E                   |
 | 8    | Conductor: ejecución del viaje             | Lista: 158 unitarias y 78 E2E                   |
-| 9    | Admin: dashboard, conductores y tarifas    | Siguiente                                       |
-| 10   | Admin: viajes, reportes y auditoría        | Pendiente                                       |
-| 11   | Pulido y calidad                           | Pendiente                                       |
+| 9    | Admin: dashboard, conductores y tarifas    | Lista                                           |
+| 10   | Admin: viajes, reportes y auditoría        | Lista: 164 unitarias y 90 E2E                   |
+| 11   | Pulido y calidad                           | Siguiente                                       |
 | 12   | Cierre                                     | Pendiente                                       |
 
 ## Backlog de features
@@ -42,7 +42,8 @@ Detalle en la Tabla 12 de `UberTeam_Historias_y_Mockups_APA.docx`.
 - Sin WebSocket: polling cada 5 s.
 - Sin endpoint para rechazar solicitudes ni para consultar el viaje activo del conductor.
 - Sin pagos (HU-07 simulado), sin calificación del conductor al pasajero (HU-08) y sin bloqueo de usuarios (HU-09 gestiona conductores).
-- Sin `/admin/metrics`: el dashboard usa `/admin/dashboard` y `/admin/trips`.
+- Sin `/admin/metrics`: el dashboard usa `/admin/dashboard`; los reportes, `/admin/reports`.
+- La documentación no muestra la forma de `/admin/trips`, `/admin/reports` ni `/admin/audit-logs`: los adaptadores aceptan páginas de Laravel o listas y completan las secciones que falten.
 - `forgot-password` cambia la clave solo con el correo: riesgo de seguridad a informar.
 - El viaje asignado de `/client/active` no trae origen ni destino: la solicitud se guarda en el teléfono (`ActiveRideStorage`) para seguir dibujando la ruta.
 - El backend no vence las solicitudes sin conductor: el frontend las cancela a los 2 minutos.

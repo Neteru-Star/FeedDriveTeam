@@ -1,5 +1,17 @@
 # Changelog
 
+## Fases 9 y 10: Panel del administrador (HU-09)
+
+- Dashboard con indicadores (ingresos, viajes activos y cancelados, pasajeros, conductores y por aprobar), viajes recientes e incidencias; cada indicador lleva a su listado filtrado.
+- Conductores filtrados por estado (en la URL), con aprobar, suspender (pide el motivo), rechazar y reactivar con notas y confirmación.
+- Tarifas: listado y creación con validación y vista previa del cálculo para tres viajes de ejemplo frente a la tarifa activa.
+- Viajes con filtros de estado, fecha, conductor y pasajero sincronizados con la URL, y paginación.
+- Reportes con ingresos, tasa de cancelación, cancelaciones por motivo e ingresos por conductor en barras, y tabla de desempeño.
+- Auditoría cronológica con búsqueda sin tildes ni mayúsculas y carga de registros anteriores.
+- Adaptadores tolerantes a respuestas no documentadas (páginas de Laravel o listas, secciones faltantes).
+- `npm run apk` compila el APK contra el backend simulado del computador, otra IP o el real.
+- Pruebas: adaptadores y cálculo de tarifas; E2E del dashboard, aprobar un conductor que luego se conecta, suspender con motivo, crear una tarifa, filtros en la URL y búsqueda en la auditoría.
+
 ## Fase 8: Ejecución del viaje por el conductor (HU-05)
 
 - Panel del viaje guiado por `trip-status.ts`: "Llegué al punto" (`/arrive`), "Iniciar viaje" (`/start`) y "Finalizar viaje" (`/complete`, con confirmación), con línea de tiempo, distancia y tiempo hasta el punto, llamada al pasajero y enlace de navegación en Google Maps.
