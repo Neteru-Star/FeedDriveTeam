@@ -8,15 +8,16 @@ import { IonSkeletonText } from '@ionic/angular/ion-skeleton-text';
 import { IonToggle } from '@ionic/angular/ion-toggle';
 import type { ToggleCustomEvent } from '@ionic/core';
 import { MapPageComponent } from '@layout/map-page.component';
-import { CurrencyCopPipe } from '@shared/pipes/format.pipes';
 import { LocationNoticeComponent } from '@shared/ui/location-notice/location-notice.component';
 import { MapComponent } from '@shared/ui/map/map.component';
 import type { MapFocus, MapMarker, MapRoute } from '@shared/ui/map/map.models';
-import { RouteLineComponent } from '@shared/ui/route-line/route-line.component';
 import { BOGOTA, formatDistance, type LatLng } from '@shared/utils/geo';
 
 import { DriverStatusBarComponent } from '../components/driver-status-bar.component';
+import { DriverTripPanelComponent } from '../components/driver-trip-panel.component';
+import { DriverTripSummaryComponent } from '../components/driver-trip-summary.component';
 import { RequestCardComponent } from '../components/request-card.component';
+import { DriverTripStore } from '../data-access/driver-trip.store';
 import type { ApprovalStatus } from '../data-access/driver.models';
 import { DriverStore } from '../data-access/driver.store';
 
@@ -48,10 +49,10 @@ const REVIEW_TEXT: Record<ApprovalStatus, { title: string; message: string }> = 
     MapPageComponent,
     MapComponent,
     LocationNoticeComponent,
-    RouteLineComponent,
     RequestCardComponent,
     DriverStatusBarComponent,
-    CurrencyCopPipe,
+    DriverTripPanelComponent,
+    DriverTripSummaryComponent,
   ],
   template: `
     <app-map-page [sheetLabel]="sheetLabel()">
@@ -59,6 +60,7 @@ const REVIEW_TEXT: Record<ApprovalStatus, { title: string; message: string }> = 
         [center]="center()"
         [markers]="markers()"
         [route]="route()"
+        [fitRoute]="false"
         [focus]="focus()"
         [fitPadding]="routePadding"
       />
@@ -106,27 +108,11 @@ const REVIEW_TEXT: Record<ApprovalStatus, { title: string; message: string }> = 
         }
 
         @case ('assigned') {
-          @if (store.assigned(); as a) {
-            <h2>Viaje aceptado</h2>
-            <p class="app-muted">Dirígete al punto de partida para recoger a {{ a.request.client.name }}.</p>
-            <div class="passenger">
-              <div>
-                <strong>{{ a.request.client.name }}</strong>
-                <small class="app-muted">Pasajero</small>
-              </div>
-              <a
-                class="app-call"
-                [href]="'tel:' + a.request.client.phone"
-                [attr.aria-label]="'Llamar a ' + a.request.client.name"
-              >
-                <ion-icon name="call-outline" aria-hidden="true" /> Llamar
-              </a>
-            </div>
-            <app-route-line [origin]="a.request.origin_name" [destination]="a.request.destination_name" />
-            <p class="fare">
-              Ganancia estimada <strong class="mono">{{ a.trip.estimated_fare | currencyCop }}</strong>
-            </p>
-          }
+          <app-driver-trip-panel />
+        }
+
+        @case ('summary') {
+          <app-driver-trip-summary />
         }
 
         @default {
@@ -186,12 +172,15 @@ export class DriverHomePage {
   protected readonly auth = inject(AuthStore);
   protected readonly location = inject(LocationService);
   protected readonly store = inject(DriverStore);
+  private readonly tripStore = inject(DriverTripStore);
   private readonly map = viewChild.required(MapComponent);
 
   protected readonly center = signal<LatLng>(BOGOTA);
   protected readonly online = computed(() => this.store.mode() === 'online');
   protected readonly showNotice = computed(() => ['denied', 'unavailable'].includes(this.location.status()));
-  protected readonly sheetLabel = computed(() => (this.store.mode() === 'assigned' ? 'Viaje' : 'Disponibilidad'));
+  protected readonly sheetLabel = computed(() =>
+    this.store.mode() === 'assigned' || this.store.mode() === 'summary' ? 'Viaje' : 'Disponibilidad',
+  );
   protected readonly review = computed(() => REVIEW_TEXT[this.store.approval() ?? 'pending']);
   // El panel con la lista ocupa cerca del 60 % de la pantalla.
   protected readonly routePadding = { top: 90, right: 40, bottom: Math.round(window.innerHeight * 0.62), left: 40 };
@@ -206,10 +195,20 @@ export class DriverHomePage {
     };
   });
 
-  /** En línea: el conductor y los puntos de recogida a la vista, sobre el panel. Se reencuadra al cambiar la lista. */
+  /**
+   * Puntos a la vista sobre el panel. En línea: el conductor y las recogidas (se reencuadra al cambiar la lista).
+   * En un viaje: el conductor y el punto al que va (recogida o destino).
+   */
   protected readonly focus = computed<MapFocus | null>(() => {
     const me = this.location.position();
-    if (!this.online() || !me) return null;
+    if (!me) return null;
+    const route = this.route();
+    if (this.store.mode() === 'assigned' && route) {
+      const status = this.tripStore.status();
+      const to = status === 'in_progress' ? route.to : route.from;
+      return { key: `${this.store.assigned()?.trip.id}-${status}`, points: [me, to] };
+    }
+    if (!this.online()) return null;
     const origins = this.store
       .requests()
       .filter((r) => r.origin_latitude !== undefined && r.origin_longitude !== undefined)

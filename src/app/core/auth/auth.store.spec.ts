@@ -95,6 +95,22 @@ describe('AuthStore', () => {
     expect(api.logout).toHaveBeenCalledWith('jwt-1');
   });
 
+  it('runs the before-logout tasks while the token is still valid, even if one fails', async () => {
+    api.login.mockResolvedValue(response);
+    const store = setup();
+    await store.login({ login: 'x', password: 'y' });
+    const tokens: (string | null)[] = [];
+    store.beforeLogout(async () => void tokens.push(store.token()));
+    store.beforeLogout(() => Promise.reject(new Error('offline')));
+    const remove = store.beforeLogout(async () => void tokens.push('removed'));
+    remove();
+
+    await store.logout();
+
+    expect(tokens).toEqual(['jwt-1']);
+    expect(store.isAuthenticated()).toBe(false);
+  });
+
   it('warns 2 minutes before the token expires and closes the session when it does', async () => {
     vi.useFakeTimers();
     api.login.mockResolvedValue({ ...response, expires_in: 300 });

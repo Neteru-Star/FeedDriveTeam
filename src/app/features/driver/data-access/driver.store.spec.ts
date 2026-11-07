@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { AuthStore } from '@core/auth/auth.store';
 import { APP_CONFIG } from '@core/config/app-config';
 import { HapticsService } from '@core/device/haptics.service';
 import { ApiError } from '@core/http/api-error';
@@ -64,12 +65,17 @@ describe('DriverStore', () => {
   const haptics = { tap: vi.fn(), success: vi.fn(), error: vi.fn() };
   const reporter = { start: vi.fn(), stop: vi.fn(async () => undefined), setTrip: vi.fn() };
   let locates = true;
+  let logoutHook: () => Promise<unknown> = async () => undefined;
 
   function setup(): DriverStore {
     TestBed.configureTestingModule({
       providers: [
         DriverStore,
         { provide: DriverApi, useValue: api },
+        {
+          provide: AuthStore,
+          useValue: { beforeLogout: (hook: () => Promise<unknown>) => ((logoutHook = hook), () => undefined) },
+        },
         { provide: LocationReporter, useValue: reporter },
         { provide: HapticsService, useValue: haptics },
         { provide: ToastService, useValue: toast },
@@ -244,5 +250,25 @@ describe('DriverStore', () => {
 
     expect(store.mode()).toBe('assigned');
     expect(reporter.setTrip).toHaveBeenCalledWith(30);
+  });
+
+  it('goes offline before logging out and does not reconnect by itself afterwards', async () => {
+    const store = setup();
+    await store.init();
+    await store.goOnline();
+
+    await logoutHook();
+
+    expect(api.availability).toEqual(['available', 'unavailable']);
+    expect(session.online).toBe(false);
+  });
+
+  it('goes offline on logout even if the app was reopened on another screen', async () => {
+    session = { online: true, assigned: null };
+    setup();
+
+    await logoutHook();
+
+    expect(api.availability).toEqual(['unavailable']);
   });
 });

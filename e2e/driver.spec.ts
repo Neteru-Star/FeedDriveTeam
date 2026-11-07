@@ -56,7 +56,7 @@ test('goes online, lists a nearby request and accepts it (HU-04)', async ({ page
   await expect(card(page, origin)).toContainText('Ganancia estimada');
   await card(page, origin).getByRole('button', { name: 'Aceptar' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Viaje aceptado' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Recoge a Laura Gómez' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Llamar a Laura Gómez' })).toHaveAttribute('href', /^tel:3\d{9}$/);
   const active = await (
     await request.get(`${API}/client/active`, { headers: { Authorization: `Bearer ${client.token}` } })
@@ -65,7 +65,7 @@ test('goes online, lists a nearby request and accepts it (HU-04)', async ({ page
 
   // El viaje aceptado se retoma al recargar.
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Viaje aceptado' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Recoge a Laura Gómez' })).toBeVisible();
 });
 
 test('explains when another driver took the request first (409)', async ({ page, request }) => {

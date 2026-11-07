@@ -32,6 +32,7 @@ export class AuthStore {
   private readonly session = signal<StoredSession | null>(null);
   private timers: ReturnType<typeof setTimeout>[] = [];
 
+  private readonly logoutHooks = new Set<() => Promise<unknown>>();
   readonly user = computed(() => this.session()?.user ?? null);
   readonly token = computed(() => this.session()?.token ?? null);
   readonly role = computed(() => this.user()?.role ?? null);
@@ -68,8 +69,19 @@ export class AuthStore {
     await this.api.register(payload);
   }
 
+  /**
+   * Tareas que deben correr antes de cerrar sesión, mientras el token aún sirve
+   * (por ejemplo, desconectar al conductor). Devuelve la función para quitarla.
+   */
+  beforeLogout(hook: () => Promise<unknown>): () => void {
+    this.logoutHooks.add(hook);
+    return () => this.logoutHooks.delete(hook);
+  }
+
   async logout(): Promise<void> {
     const token = this.token();
+    // Si una tarea falla (sin conexión), igual se cierra la sesión.
+    await Promise.allSettled([...this.logoutHooks].map((hook) => hook()));
     await this.clear();
     if (token) await this.api.logout(token).catch(() => undefined);
     await this.nav.navigateRoot('/login');

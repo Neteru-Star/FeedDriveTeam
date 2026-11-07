@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
+import { AuthStore } from '@core/auth/auth.store';
 import { APP_CONFIG } from '@core/config/app-config';
 import { HapticsService } from '@core/device/haptics.service';
 import { ApiError } from '@core/http/api-error';
@@ -29,9 +30,10 @@ import { LocationReporter } from './location-reporter';
  * - `checking`: consultando si su cuenta está aprobada.
  * - `review`: cuenta pendiente, rechazada o suspendida (403 con `approval_status`).
  * - `offline` / `online`: desconectado o recibiendo solicitudes; `switching` mientras cambia.
- * - `assigned`: aceptó un viaje (la Fase 8 lo lleva hasta el final).
+ * - `assigned`: tiene un viaje (por recoger, esperando o en camino).
+ * - `summary`: acaba de finalizar el viaje y ve el resumen.
  */
-export type DriverMode = 'checking' | 'review' | 'offline' | 'switching' | 'online' | 'assigned';
+export type DriverMode = 'checking' | 'review' | 'offline' | 'switching' | 'online' | 'assigned' | 'summary';
 
 /** Solicitud con la distancia de recogida calculada desde el GPS del conductor (si el backend envía el origen). */
 export interface NearbyRequest extends DriverRideRequest {
@@ -91,7 +93,19 @@ export class DriverStore {
   });
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.stopPolling());
+    // Al cerrar sesión en línea, se desconecta mientras el token aún sirve y no se reconecta solo al volver.
+    // Se usa también lo guardado: la sesión puede cerrarse desde otra pantalla tras recargar la app.
+    const removeHook = inject(AuthStore).beforeLogout(async () => {
+      const saved = await this.storage.load();
+      if (this.mode() === 'online' || (saved.online && !saved.assigned)) {
+        await this.api.setAvailability('unavailable');
+      }
+      await this.storage.save({ ...saved, online: false, assigned: this.assigned() ?? saved.assigned });
+    });
+    inject(DestroyRef).onDestroy(() => {
+      removeHook();
+      this.stopPolling();
+    });
   }
 
   /** Al abrir la pantalla: retoma el viaje asignado, consulta la aprobación y vuelve a conectarse si estaba en línea. */
@@ -196,7 +210,21 @@ export class DriverStore {
     }
   }
 
-  /** Se libera el viaje asignado (la Fase 8 lo llama al finalizarlo) y el conductor vuelve a estar en línea. */
+  /** Guarda el avance del viaje (estado y rastro GPS) para retomarlo si la app se cierra. */
+  async updateAssigned(next: AssignedTrip): Promise<void> {
+    this.assigned.set(next);
+    await this.persist(true, next);
+  }
+
+  /** El viaje terminó: el backend vuelve a dejar al conductor disponible; primero ve el resumen. */
+  async showSummary(): Promise<void> {
+    this.assigned.set(null);
+    this.reporter.setTrip(null);
+    this.mode.set('summary');
+    await this.persist(true, null);
+  }
+
+  /** Se libera el viaje (resumen cerrado o viaje cancelado) y el conductor vuelve a recibir solicitudes. */
   async releaseTrip(): Promise<void> {
     this.assigned.set(null);
     this.reporter.setTrip(null);

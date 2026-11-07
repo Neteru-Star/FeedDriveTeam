@@ -86,26 +86,3 @@ ul {
   display: grid;
   gap: 10px;
 }
-
-.passenger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 14px 0;
-
-  strong,
-  small {
-    display: block;
-  }
-}
-
-.fare {
-  margin: 14px 0 0;
-  color: var(--color-muted);
-
-  strong {
-    margin-left: 6px;
-    color: var(--color-ink);
-  }
-}

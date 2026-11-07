@@ -1,5 +1,7 @@
 import type { TripStatus } from '@shared/models/trip-status';
 
+import type { TrailState } from './trip-trail';
+
 export type Availability = 'available' | 'unavailable';
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
@@ -40,6 +42,28 @@ export interface AcceptedTrip {
 export interface AssignedTrip {
   trip: AcceptedTrip;
   request: DriverRideRequest;
+  /** Estado actual del viaje según las acciones del conductor (no hay endpoint para consultarlo). */
+  status?: TripStatus;
+  /** Rastro GPS desde que inició el recorrido. */
+  trail?: TrailState;
+}
+
+/** Respuesta de `POST /driver/trips/{id}/complete`. */
+export interface CompletedTrip {
+  id: number;
+  status: TripStatus;
+  final_fare: number;
+  distance_travelled_km: number;
+  duration_travelled_min: number;
+  completed_at: string;
+}
+
+/** Resumen que ve el conductor al finalizar. */
+export interface TripSummary {
+  completed: CompletedTrip;
+  request: DriverRideRequest;
+  /** La distancia salió del GPS o, sin rastro útil, de la estimación de la solicitud. */
+  distanceSource: 'gps' | 'estimate';
 }
 
 export interface LocationReport {

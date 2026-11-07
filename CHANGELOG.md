@@ -1,5 +1,15 @@
 # Changelog
 
+## Fase 8: Ejecución del viaje por el conductor (HU-05)
+
+- Panel del viaje guiado por `trip-status.ts`: "Llegué al punto" (`/arrive`), "Iniciar viaje" (`/start`) y "Finalizar viaje" (`/complete`, con confirmación), con línea de tiempo, distancia y tiempo hasta el punto, llamada al pasajero y enlace de navegación en Google Maps.
+- Distancia y duración reales desde el rastro GPS (`trip-trail.ts`): ignora el ruido con el carro quieto y los saltos de más de 150 km/h; sin rastro útil reporta la distancia estimada y lo indica en el resumen.
+- Resumen final con la tarifa definitiva, distancia y duración, y "Listo, seguir en línea".
+- El viaje, su estado y el rastro se guardan en el teléfono y se retoman al recargar; si el pasajero canceló, el conductor lo ve al intentar avanzar y vuelve a estar en línea.
+- Al cerrar sesión en línea, el conductor se desconecta antes de invalidar el token (`AuthStore.beforeLogout`) y no se reconecta solo al volver.
+- El mapa del conductor encuadra su posición y el punto al que va en cada etapa.
+- Pruebas: acumulador del rastro, store del viaje (flujo completo, cancelado por el pasajero, estado adelantado, errores), cierre de sesión y E2E con el pasajero y el conductor en dos sesiones del navegador al mismo tiempo. APK de depuración compilado.
+
 ## Fase 7: Disponibilidad y solicitudes del conductor (HU-04)
 
 - Estado de la cuenta: `GET /driver/ride-requests` responde 403 con `approval_status` si no está aprobada; la pantalla muestra "en revisión", "rechazada" o "suspendida" y permite volver a consultar.

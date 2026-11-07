@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { APP_CONFIG } from '@core/config/app-config';
 import { firstValueFrom, map } from 'rxjs';
 
-import type { AcceptedTrip, Availability, DriverRideRequest, LocationReport } from './driver.models';
+import type { AcceptedTrip, Availability, CompletedTrip, DriverRideRequest, LocationReport } from './driver.models';
 
 /** Endpoints del conductor (`/api/driver`). Adapta las respuestas `{ success, ... }` a modelos. */
 @Injectable({ providedIn: 'root' })
@@ -30,6 +30,20 @@ export class DriverApi {
       this.http
         .post<{ trip: AcceptedTrip }>(`${this.base}/ride-requests/${requestId}/accept`, {})
         .pipe(map((r) => r.trip)),
+    );
+  }
+
+  /** Llegó al punto de recogida o inició el recorrido (`/arrive`, `/start`). */
+  advance(tripId: number, action: 'arrive' | 'start'): Promise<unknown> {
+    return firstValueFrom(this.http.post(`${this.base}/trips/${tripId}/${action}`, {}));
+  }
+
+  complete(
+    tripId: number,
+    actual: { actual_distance_km: number; actual_duration_min: number },
+  ): Promise<CompletedTrip> {
+    return firstValueFrom(
+      this.http.post<{ trip: CompletedTrip }>(`${this.base}/trips/${tripId}/complete`, actual).pipe(map((r) => r.trip)),
     );
   }
 

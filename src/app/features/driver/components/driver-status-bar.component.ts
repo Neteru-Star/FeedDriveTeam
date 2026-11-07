@@ -9,6 +9,7 @@ const STATE_LABEL: Record<DriverMode, string> = {
   switching: 'Cambiando…',
   online: 'En línea',
   assigned: 'En viaje',
+  summary: 'En línea',
 };
 
 /** Píldora superior del conductor: sus iniciales, su nombre y su estado. */
