@@ -10,6 +10,7 @@
     "mock:api:auto": "node mock-api/server.mjs --autopilot",
     "mock:test": "node mock-api/smoke-test.mjs",
     "build": "ng build",
+    "apk": "node scripts/build-apk.mjs",
     "watch": "ng build --watch --configuration development",
     "lint": "npm run eslint && npm run typecheck:e2e && npm run prettier -- --check",
     "lint:fix": "npm run eslint -- --fix && npm run prettier -- --write",

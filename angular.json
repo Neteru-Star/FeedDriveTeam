@@ -83,6 +83,15 @@
                 }
               ]
             },
+            "device": {
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.device.ts"
+                }
+              ]
+            },
             "ci": {
               "progress": false
             }
