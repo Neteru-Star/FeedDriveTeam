@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Geocoder, type Place } from '@core/geo/geocoder';
+import { RoutePlanner } from '@core/geo/route-planner';
 import { LocationService } from '@core/location/location.service';
 import { ActionSheetController } from '@ionic/angular/action-sheet-controller';
 import { AlertController } from '@ionic/angular/alert-controller';
@@ -24,7 +25,7 @@ import type { MapMarker, MapPadding, MapRoute } from '@shared/ui/map/map.models'
 import { RouteLineComponent } from '@shared/ui/route-line/route-line.component';
 import { ToastService } from '@shared/ui/toast/toast.service';
 import { BOGOTA, formatDistance, type LatLng } from '@shared/utils/geo';
-import { catchError, debounceTime, filter, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, filter, of, startWith, switchMap } from 'rxjs';
 
 import { FareConfirmComponent } from '../components/fare-confirm.component';
 import { PlaceSearchComponent } from '../components/place-search.component';
@@ -33,11 +34,11 @@ import { RideStatusComponent } from '../components/ride-status.component';
 import { ActiveRideStore, CANCEL_REASON_MAX } from '../data-access/active-ride.store';
 import type { RideRequest, RideRequestPayload } from '../data-access/client.models';
 import { FareQuoteStore } from '../data-access/fare-quote.store';
+import { CURRENT_LOCATION, LOCATION_SEPARATOR, pickupName } from '../data-access/pickup-name';
 import { TripDraftStore, type PointKind } from '../data-access/trip-draft.store';
 import { TripHistoryStore } from '../data-access/trip-history.store';
 import type { RateTarget } from '../data-access/trip-record';
 
-const CURRENT_LOCATION = 'Mi ubicación actual';
 /** Mismo punto de corte que la hoja lateral de map-page.component.scss. */
 const WIDE_SCREEN_PX = 900;
 const REVERSE_DEBOUNCE_MS = 500;
@@ -82,6 +83,7 @@ export class ClientHomePage {
   protected readonly ride = inject(ActiveRideStore);
   private readonly history = inject(TripHistoryStore);
   private readonly geocoder = inject(Geocoder);
+  private readonly planner = inject(RoutePlanner);
   private readonly toast = inject(ToastService);
   private readonly alerts = inject(AlertController);
   private readonly actionSheets = inject(ActionSheetController);
@@ -136,6 +138,18 @@ export class ClientHomePage {
       : { top: 90, right: 40, bottom: Math.round(window.innerHeight * 0.55), left: 40 };
 
   protected readonly showNotice = computed(() => ['denied', 'unavailable'].includes(this.location.status()));
+  /** Ruta por calles del viaje que se planea (la misma consulta que usa el mapa, que queda en caché). */
+  private readonly road = toSignal(
+    toObservable(this.draft.route).pipe(
+      switchMap((route) => (route ? this.planner.route(route.from, route.to).pipe(startWith(null)) : of(null))),
+    ),
+    { initialValue: null },
+  );
+  /** "11,8 km · ~19 min" por carretera, o null mientras no se conoce. */
+  protected readonly roadSummary = computed(() => {
+    const road = this.road();
+    return road ? `${formatDistance(road.distanceKm)} · ~${Math.max(1, Math.round(road.durationMin))} min` : null;
+  });
   protected readonly distance = computed(() => {
     const km = this.draft.distanceKm();
     return km === null ? '' : formatDistance(km);
@@ -228,7 +242,7 @@ export class ClientHomePage {
       .pipe(catchError(() => of(null)))
       .subscribe((place) => {
         if (place && this.draft.origin()?.source === 'gps') {
-          this.draft.relabel('origin', `${CURRENT_LOCATION} · ${place.label}`, place.detail);
+          this.draft.relabel('origin', `${CURRENT_LOCATION}${LOCATION_SEPARATOR}${place.label}`, place.detail);
         }
       });
   }
@@ -299,7 +313,7 @@ export class ClientHomePage {
     const destination = this.draft.destination();
     if (!origin || !destination) return;
     await this.submit({
-      origin_name: origin.label,
+      origin_name: pickupName(origin),
       origin_latitude: origin.position.lat,
       origin_longitude: origin.position.lng,
       destination_name: destination.label,

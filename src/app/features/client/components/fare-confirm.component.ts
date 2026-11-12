@@ -30,6 +30,8 @@ export class FareConfirmComponent {
   readonly quote = input.required<QuoteState>();
   readonly origin = input.required<string>();
   readonly destination = input.required<string>();
+  /** Distancia y tiempo por carretera ("11,8 km · ~19 min"), si el servicio de rutas respondió. */
+  readonly road = input<string | null>(null);
   readonly requesting = input(false);
 
   readonly confirm = output();

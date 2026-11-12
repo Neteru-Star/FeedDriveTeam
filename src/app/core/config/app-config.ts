@@ -13,6 +13,8 @@ export interface AppConfig {
   mapTiles: MapTilesConfig;
   /** Servicio de geocodificación compatible con Nominatim. */
   geocoderUrl: string;
+  /** Servicio de rutas por calles compatible con OSRM. */
+  routingUrl: string;
   pollIntervalMs: number;
 }
 

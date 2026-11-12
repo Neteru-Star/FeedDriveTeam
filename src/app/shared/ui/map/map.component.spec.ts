@@ -1,7 +1,9 @@
 import { signal } from '@angular/core';
 import { APP_CONFIG } from '@core/config/app-config';
+import { RoutePlanner, type RoadRoute } from '@core/geo/route-planner';
 import { ThemeService } from '@core/theme/theme.service';
 import { render } from '@testing-library/angular';
+import { Subject, of, type Observable } from 'rxjs';
 
 import { GLIDE_MS, MapComponent } from './map.component';
 import type { MapMarker } from './map.models';
@@ -14,8 +16,14 @@ const tiles = {
 const PARQUE_93 = { lat: 4.6766, lng: -74.0483 };
 const ANDINO = { lat: 4.6664, lng: -74.0536 };
 
+const VIRREY = { lat: 4.6732, lng: -74.0539 };
+/** Ruta por calles de prueba: pasa por una esquina intermedia. */
+const road: RoadRoute = { path: [PARQUE_93, VIRREY, ANDINO], distanceKm: 1.6, durationMin: 6 };
+
 describe('MapComponent', () => {
   const dark = signal(false);
+  let requested: string[];
+  let plan: () => Observable<RoadRoute | null>;
 
   async function setup(inputs: Record<string, unknown> = {}) {
     const view = await render(MapComponent, {
@@ -23,6 +31,12 @@ describe('MapComponent', () => {
       providers: [
         { provide: APP_CONFIG, useValue: { mapTiles: tiles } },
         { provide: ThemeService, useValue: { dark } },
+        {
+          provide: RoutePlanner,
+          useValue: {
+            route: (from: { lat: number }, to: { lat: number }) => (requested.push(`${from.lat}>${to.lat}`), plan()),
+          },
+        },
       ],
     });
     view.fixture.detectChanges();
@@ -30,7 +44,11 @@ describe('MapComponent', () => {
     return view;
   }
 
-  beforeEach(() => dark.set(false));
+  beforeEach(() => {
+    dark.set(false);
+    requested = [];
+    plan = () => of(road);
+  });
 
   it('draws a custom marker per point, with the driver pointing to its heading', async () => {
     const markers: MapMarker[] = [
@@ -90,11 +108,62 @@ describe('MapComponent', () => {
     expect(map.style.transform).toBe(framed);
   });
 
-  it('draws the route line with its pulse', async () => {
+  it('draws the route along the roads, with its pulse', async () => {
     const { container } = await setup({ route: { from: PARQUE_93, to: ANDINO } });
 
     expect(container.querySelector('path.fd-route')).not.toBeNull();
     expect(container.querySelector('path.fd-route-pulse')).not.toBeNull();
+    expect(container.querySelector('path.fd-route-pending')).toBeNull();
+  });
+
+  it('shows a dotted direct line while the road route is being calculated', async () => {
+    const pending = new Subject<RoadRoute | null>();
+    plan = () => pending;
+    const { container, fixture } = await setup({ route: { from: PARQUE_93, to: ANDINO } });
+
+    expect(container.querySelector('path.fd-route-pending')).not.toBeNull();
+    expect(container.querySelector('path.fd-route')).toBeNull();
+
+    pending.next(road);
+    fixture.detectChanges();
+    expect(container.querySelector('path.fd-route-pending')).toBeNull();
+    expect(container.querySelector('path.fd-route')).not.toBeNull();
+  });
+
+  it('keeps the dotted line when the road route cannot be calculated', async () => {
+    plan = () => of(null);
+    const { container } = await setup({ route: { from: PARQUE_93, to: ANDINO } });
+
+    expect(container.querySelector('path.fd-route-pending')).not.toBeNull();
+    expect(container.querySelector('path.fd-route')).toBeNull();
+  });
+
+  it('does not redraw or ask again when the same route arrives in a new object', async () => {
+    const { container, fixture } = await setup({ route: { from: PARQUE_93, to: ANDINO } });
+    const drawn = container.querySelector('path.fd-route');
+
+    fixture.componentRef.setInput('route', { from: { ...PARQUE_93 }, to: { ...ANDINO } });
+    fixture.detectChanges();
+
+    expect(requested).toHaveLength(1);
+    expect(container.querySelector('path.fd-route')).toBe(drawn);
+
+    fixture.componentRef.setInput('route', { from: PARQUE_93, to: VIRREY });
+    fixture.detectChanges();
+    expect(requested).toHaveLength(2);
+  });
+
+  it('ignores a late answer for a route that is no longer shown', async () => {
+    const first = new Subject<RoadRoute | null>();
+    plan = () => first;
+    const { container, fixture } = await setup({ route: { from: PARQUE_93, to: ANDINO } });
+
+    fixture.componentRef.setInput('route', null);
+    fixture.detectChanges();
+    first.next(road);
+
+    expect(container.querySelector('path.fd-route')).toBeNull();
+    expect(container.querySelector('path.fd-route-pending')).toBeNull();
   });
 
   it('switches the map style with the dark theme', async () => {

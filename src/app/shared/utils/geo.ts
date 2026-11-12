@@ -34,25 +34,6 @@ export function bearing(a: LatLng, b: LatLng): number {
   return (deg(Math.atan2(y, x)) + 360) % 360;
 }
 
-/**
- * Línea curva entre dos puntos (Bézier cuadrática) para dibujar la ruta sin un servicio de enrutamiento.
- * `bend` es la separación del punto de control respecto a la recta, como fracción de la distancia.
- */
-export function curvedRoute(from: LatLng, to: LatLng, segments = 32, bend = 0.18): LatLng[] {
-  const mid = { lat: (from.lat + to.lat) / 2, lng: (from.lng + to.lng) / 2 };
-  const control = { lat: mid.lat - (to.lng - from.lng) * bend, lng: mid.lng + (to.lat - from.lat) * bend };
-  const points: LatLng[] = [];
-  for (let i = 0; i <= segments; i++) {
-    const t = i / segments;
-    const u = 1 - t;
-    points.push({
-      lat: u * u * from.lat + 2 * u * t * control.lat + t * t * to.lat,
-      lng: u * u * from.lng + 2 * u * t * control.lng + t * t * to.lng,
-    });
-  }
-  return points;
-}
-
 /** Distancia legible en español: "850 m" o "12,4 km". */
 export function formatDistance(km: number): string {
   if (km < 1) return `${Math.round(km * 1000)} m`;

@@ -17,6 +17,7 @@ import { routes } from './app.routes';
 import { AuthStore } from './core/auth/auth.store';
 import { APP_CONFIG } from './core/config/app-config';
 import { Geocoder, NominatimGeocoder } from './core/geo/geocoder';
+import { OsrmRoutePlanner, RoutePlanner } from './core/geo/route-planner';
 import { authInterceptor, errorInterceptor } from './core/http/interceptors';
 
 // Números, fechas y moneda en formato colombiano: $ 22.750
@@ -32,6 +33,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     { provide: Geocoder, useClass: NominatimGeocoder },
+    { provide: RoutePlanner, useClass: OsrmRoutePlanner },
     // La sesión guardada se recupera antes de la primera navegación, para que los guards la vean.
     provideAppInitializer(() => inject(AuthStore).restore()),
   ],

@@ -22,9 +22,23 @@ test.describe('passenger with location access (HU-02)', () => {
     await page.getByRole('button', { name: /Parque El Virrey/ }).click();
 
     await expect(page.getByLabel('Destino')).toHaveValue('Parque El Virrey');
-    await expect(page.getByText('Distancia en línea recta')).toBeVisible();
+    await expect(page.getByText('Por carretera: 1,9 km · ~7 min')).toBeVisible();
     await expect(page.locator('path.fd-route')).toHaveCount(1);
+    // La ruta sigue las calles: el servicio de rutas simulado dobla en una esquina (dos tramos), no va directo.
+    await expect(page.locator('path.fd-route')).toHaveAttribute('d', /^M[^L]+L[^L]+L[^L]+$/);
+    await expect(page.locator('path.fd-route-pending')).toHaveCount(0);
     await expect(page.locator('.fd-mk-destination')).toBeVisible();
+  });
+
+  test('shows a dotted direct line when the routing service does not answer', async ({ page }) => {
+    await page.route('https://router.project-osrm.org/**', (route) => route.abort());
+    await page.getByLabel('Destino').fill('Parque El Virrey');
+    await page.getByRole('button', { name: /Parque El Virrey/ }).click();
+
+    await expect(page.locator('path.fd-route-pending')).toHaveCount(1);
+    await expect(page.locator('path.fd-route')).toHaveCount(0);
+    // Sin ruta por calles se puede seguir: la tarifa la calcula el backend.
+    await expect(page.getByRole('button', { name: 'Ver tarifa' })).toBeVisible();
   });
 
   test('rejects a destination at the same place as the origin', async ({ page }) => {
@@ -51,7 +65,7 @@ test.describe('passenger with location access (HU-02)', () => {
     await page.getByRole('button', { name: 'Confirmar destino' }).click();
 
     await expect(page.getByRole('heading', { name: '¿A dónde vas?' })).toBeVisible();
-    await expect(page.getByText('Distancia en línea recta')).toBeVisible();
+    await expect(page.getByText('Por carretera')).toBeVisible();
   });
 });
 

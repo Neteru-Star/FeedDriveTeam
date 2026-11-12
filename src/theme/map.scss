@@ -10,6 +10,8 @@
   inset: 0;
   background: var(--color-surface);
   font-family: var(--font-ui);
+  // Contexto de apilamiento propio: los z-index internos de Leaflet (hasta 1000) no tapan paneles ni botones.
+  isolation: isolate;
 
   // Estilo propio sobre las teselas de OpenStreetMap: tonos apagados con matiz verde (claro)
   // e inversión hacia el negro verdoso de la paleta (oscuro).
@@ -25,6 +27,7 @@
     background: color-mix(in srgb, var(--color-surface) 80%, transparent);
     color: var(--color-muted);
     font-size: 10px;
+    border-radius: 8px;
 
     a {
       color: inherit;
@@ -112,6 +115,16 @@
   stroke-linecap: round;
   fill: none;
   opacity: 0.9;
+}
+
+// Trazo provisional (línea directa) mientras llega la ruta por calles, o si el servicio de rutas no responde
+.fd-route-pending {
+  stroke: var(--color-primary-strong);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 2 10;
+  fill: none;
+  opacity: 0.7;
 }
 
 .fd-route-pulse {

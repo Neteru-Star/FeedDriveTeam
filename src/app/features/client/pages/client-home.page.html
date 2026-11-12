@@ -62,6 +62,7 @@
     [quote]="quote()"
     [origin]="draft.origin()!.label"
     [destination]="draft.destination()!.label"
+    [road]="roadSummary()"
     [requesting]="ride.state().kind === 'requesting'"
     (confirm)="requestRide()"
     (retry)="retryEstimate()"
@@ -84,7 +85,11 @@
   @if (draft.route() && draft.origin() && draft.destination()) {
   <div class="summary">
     <app-route-line [origin]="draft.origin()!.label" [destination]="draft.destination()!.label" />
+    @if (roadSummary(); as road) {
+    <p class="app-muted">Por carretera: <strong>{{ road }}</strong></p>
+    } @else {
     <p class="app-muted">Distancia en línea recta: <strong>{{ distance() }}</strong></p>
+    }
     <ion-button expand="block" (click)="showFare()">Ver tarifa</ion-button>
   </div>
   } }

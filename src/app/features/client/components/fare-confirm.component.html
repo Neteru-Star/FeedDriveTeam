@@ -28,6 +28,12 @@
         <dd class="mono">{{ e.estimated_fare | currencyCop }}</dd>
       </div>
     </dl>
+    @if (road(); as r) {
+      <p class="road app-muted">
+        Por carretera: <strong>{{ r }}</strong
+        >. La tarifa es una estimación en línea recta; la final se calcula con el recorrido real.
+      </p>
+    }
     <details class="breakdown">
       <summary>Ver desglose</summary>
       <app-fare-display [total]="e.estimated_fare" [surge]="surge()" [breakdown]="breakdown()" />

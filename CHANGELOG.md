@@ -1,5 +1,15 @@
 # Changelog
 
+## Corrección: rutas por las calles
+
+- La ruta del mapa seguía una curva directa entre origen y destino y atravesaba zonas imposibles de transitar. Ahora se calcula por las vías con OSRM (`RoutePlanner`, intercambiable como el geocodificador), con caché de las últimas rutas y límite de espera de 8 s.
+- Mientras llega la ruta, o si el servicio no responde, se muestra una línea punteada directa en lugar de una ruta falsa.
+- La ruta solo se redibuja y reencuadra cuando cambia: antes se reencuadraba con cada consulta del viaje y deshacía lo que movía el usuario.
+- El pasajero ve la distancia y el tiempo por carretera al planear y al confirmar, con un aviso de que la tarifa estimada usa la línea recta.
+- El conductor ve el camino hasta la recogida y luego el recorrido, encuadrados completos, y recibe la dirección de recogida en lugar de "Mi ubicación actual".
+- La atribución de OpenStreetMap pasa arriba a la derecha: abajo quedaba debajo de la hoja inferior.
+- Pruebas: servicio de rutas (formato, caché, sin ruta, errores y tiempo de espera), mapa (ruta por calles, línea provisional, sin redibujar, respuesta tardía), nombre de recogida y E2E con el servicio de rutas simulado y caído.
+
 ## Fases 11 y 12: Pulido y cierre
 
 - Auditoría de accesibilidad automatizada con axe (WCAG 2.1 AA) en las pantallas de los tres roles, en móvil y escritorio, sin infracciones graves ni críticas.

@@ -23,7 +23,7 @@
 
 - Notificaciones push o sonido al recibir una solicitud (conductor)
 - Seguimiento GPS en segundo plano para el conductor
-- Rutas por calles reales (OSRM u otro servicio) para el trazado y el tiempo estimado
+- Servicio de rutas propio o con clave (el servidor público de OSRM tiene límite de uso)
 - Lugares favoritos en el cliente
 - Compartir viaje en curso con un enlace
 - Internacionalización EN

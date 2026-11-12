@@ -12,9 +12,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { APP_CONFIG } from '@core/config/app-config';
+import { RoutePlanner, routeKey } from '@core/geo/route-planner';
 import { ThemeService } from '@core/theme/theme.service';
-import { BOGOTA, bearing, curvedRoute, haversineKm, type LatLng } from '@shared/utils/geo';
+import { BOGOTA, bearing, haversineKm, type LatLng } from '@shared/utils/geo';
 import * as L from 'leaflet';
+import type { Subscription } from 'rxjs';
 
 import type { MapFocus, MapMarker, MapPadding, MapRoute } from './map.models';
 
@@ -65,6 +67,7 @@ export class MapComponent {
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('host');
   private readonly config = inject(APP_CONFIG).mapTiles;
   private readonly theme = inject(ThemeService);
+  private readonly planner = inject(RoutePlanner);
 
   private map?: L.Map;
   private tiles?: L.TileLayer;
@@ -78,6 +81,9 @@ export class MapComponent {
   private readonly reduceMotion =
     typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   private routeLayer?: L.LayerGroup;
+  /** Ruta dibujada: si llega la misma (por ejemplo, en cada consulta del viaje) no se redibuja ni se reencuadra. */
+  private routeKey = '';
+  private routeRequest?: Subscription;
   private focusKey: string | null = null;
 
   constructor() {
@@ -86,6 +92,7 @@ export class MapComponent {
       this.init();
       destroyRef.onDestroy(() => {
         for (const frame of this.glides.values()) cancelAnimationFrame(frame);
+        this.routeRequest?.unsubscribe();
         this.map?.remove();
       });
     });
@@ -118,7 +125,8 @@ export class MapComponent {
       zoomControl: false,
       attributionControl: true,
     });
-    this.map.attributionControl.setPrefix(false);
+    // Arriba a la derecha: abajo lo taparía la hoja inferior de las pantallas con mapa.
+    this.map.attributionControl.setPrefix(false).setPosition('topright');
     this.setTiles(this.theme.dark());
     this.syncMarkers(this.markers());
     this.drawRoute(this.route());
@@ -235,16 +243,38 @@ export class MapComponent {
     this.map.fitBounds(bounds, { paddingTopLeft: [left, top], paddingBottomRight: [right, bottom], maxZoom: 16 });
   }
 
+  /**
+   * Dibuja la ruta por las calles. Mientras el servicio de rutas responde (o si falla) se muestra una línea
+   * punteada directa, para no presentar como ruta real un trazo que atraviesa manzanas.
+   */
   private drawRoute(route: MapRoute | null): void {
     if (!this.map) return;
+    const key = route ? routeKey(route.from, route.to) : '';
+    if (key === this.routeKey) return;
+    this.routeKey = key;
+    this.routeRequest?.unsubscribe();
     this.routeLayer?.remove();
     this.routeLayer = undefined;
     if (!route) return;
-    const points = curvedRoute(route.from, route.to).map((p) => [p.lat, p.lng] as L.LatLngTuple);
-    this.routeLayer = L.layerGroup([
-      L.polyline(points, { className: 'fd-route', interactive: false }),
-      L.polyline(points, { className: 'fd-route-pulse', interactive: false }),
-    ]).addTo(this.map);
+
+    this.showRoute([route.from, route.to], false);
+    this.routeRequest = this.planner.route(route.from, route.to).subscribe((road) => {
+      if (road && key === this.routeKey) this.showRoute(road.path, true);
+    });
+  }
+
+  private showRoute(path: LatLng[], onRoads: boolean): void {
+    if (!this.map) return;
+    const points = path.map((p) => [p.lat, p.lng] as L.LatLngTuple);
+    this.routeLayer?.remove();
+    this.routeLayer = L.layerGroup(
+      onRoads
+        ? [
+            L.polyline(points, { className: 'fd-route', interactive: false }),
+            L.polyline(points, { className: 'fd-route-pulse', interactive: false }),
+          ]
+        : [L.polyline(points, { className: 'fd-route-pending', interactive: false })],
+    ).addTo(this.map);
     if (this.fitRoute()) {
       const { top, right, bottom, left } = this.fitPadding();
       this.map.fitBounds(L.latLngBounds(points), {

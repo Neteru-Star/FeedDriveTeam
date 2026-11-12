@@ -135,5 +135,6 @@ test('goes offline before logging out', async ({ page, request }) => {
   await expect(page).toHaveURL(/\/login$/);
   // Al volver a entrar no se conecta solo.
   await login(page, driver.login, driver.password);
-  await expect(heading(page, 'Estás fuera de línea')).toBeVisible();
+  // Primero consulta la aprobación con la lista de solicitudes, que con la suite en paralelo puede tardar.
+  await expect(heading(page, 'Estás fuera de línea')).toBeVisible({ timeout: 15_000 });
 });

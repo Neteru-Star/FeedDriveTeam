@@ -11,3 +11,6 @@ export const MAP_TILES: MapTilesConfig = {
 };
 
 export const GEOCODER_URL = 'https://nominatim.openstreetmap.org';
+
+/** Servidor público de OSRM: gratuito y sin clave, con límite de uso. Sirve para el curso, no para producción. */
+export const ROUTING_URL = 'https://router.project-osrm.org';

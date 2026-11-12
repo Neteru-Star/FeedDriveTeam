@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, untracked, viewChild } from '@angular/core';
 import { AuthStore } from '@core/auth/auth.store';
 import { LocationService } from '@core/location/location.service';
 import { IonButton } from '@ionic/angular/ion-button';
@@ -60,7 +60,6 @@ const REVIEW_TEXT: Record<ApprovalStatus, { title: string; message: string }> = 
         [center]="center()"
         [markers]="markers()"
         [route]="route()"
-        [fitRoute]="false"
         [focus]="focus()"
         [fitPadding]="routePadding"
       />
@@ -185,8 +184,8 @@ export class DriverHomePage {
   // El panel con la lista ocupa cerca del 60 % de la pantalla.
   protected readonly routePadding = { top: 90, right: 40, bottom: Math.round(window.innerHeight * 0.62), left: 40 };
 
-  /** Ruta del viaje aceptado, si el backend envió las coordenadas de la solicitud. */
-  protected readonly route = computed<MapRoute | null>(() => {
+  /** Recogida y destino del viaje aceptado, si el backend envió las coordenadas de la solicitud. */
+  private readonly tripPoints = computed<MapRoute | null>(() => {
     const r = this.store.assigned()?.request;
     if (!r || r.origin_latitude === undefined || r.destination_latitude === undefined) return null;
     return {
@@ -194,20 +193,29 @@ export class DriverHomePage {
       to: { lat: r.destination_latitude, lng: r.destination_longitude! },
     };
   });
+  private readonly located = computed(() => this.location.position() !== null);
 
   /**
-   * Puntos a la vista sobre el panel. En línea: el conductor y las recogidas (se reencuadra al cambiar la lista).
-   * En un viaje: el conductor y el punto al que va (recogida o destino).
+   * Ruta en el mapa: camino a la recogida mientras va por el pasajero y, después, el recorrido del viaje.
+   * El camino a la recogida parte de donde estaba el conductor al aceptar; no se recalcula con cada posición
+   * del GPS para no saturar el servicio de rutas.
+   */
+  protected readonly route = computed<MapRoute | null>(() => {
+    const trip = this.tripPoints();
+    if (!trip) return null;
+    if (this.tripStore.status() === 'assigned' && this.located()) {
+      return { from: untracked(() => this.location.position())!, to: trip.from };
+    }
+    return trip;
+  });
+
+  /**
+   * Puntos a la vista sobre el panel mientras está en línea: el conductor y las recogidas (se reencuadra al
+   * cambiar la lista). Durante un viaje el mapa encuadra la ruta completa.
    */
   protected readonly focus = computed<MapFocus | null>(() => {
     const me = this.location.position();
     if (!me) return null;
-    const route = this.route();
-    if (this.store.mode() === 'assigned' && route) {
-      const status = this.tripStore.status();
-      const to = status === 'in_progress' ? route.to : route.from;
-      return { key: `${this.store.assigned()?.trip.id}-${status}`, points: [me, to] };
-    }
     if (!this.online()) return null;
     const origins = this.store
       .requests()
@@ -223,7 +231,7 @@ export class DriverHomePage {
     const markers: MapMarker[] = [];
     const position = this.location.position();
     if (position) markers.push({ id: 'me', kind: 'driver', position, heading: this.location.heading(), label: 'Tú' });
-    const route = this.route();
+    const route = this.tripPoints();
     if (route) {
       markers.push({ id: 'origin', kind: 'origin', position: route.from, label: 'Recogida' });
       markers.push({ id: 'destination', kind: 'destination', position: route.to, label: 'Destino' });

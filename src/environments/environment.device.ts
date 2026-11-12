@@ -1,6 +1,6 @@
 import type { AppConfig } from '@core/config/app-config';
 
-import { GEOCODER_URL, MAP_TILES } from './map-tiles';
+import { GEOCODER_URL, MAP_TILES, ROUTING_URL } from './map-tiles';
 
 /** URL del backend que se inyecta al compilar el APK (`scripts/build-apk.mjs` usa `--define`). */
 declare const FEEDDRIVE_API_URL: string;
@@ -11,5 +11,6 @@ export const environment: AppConfig = {
   apiBaseUrl: FEEDDRIVE_API_URL,
   mapTiles: MAP_TILES,
   geocoderUrl: GEOCODER_URL,
+  routingUrl: ROUTING_URL,
   pollIntervalMs: 5000,
 };

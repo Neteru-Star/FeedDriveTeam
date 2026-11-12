@@ -15,6 +15,12 @@ app-map-page {
   }
 }
 
+// Atribución del mapa debajo del botón de ubicación, siempre visible sobre el mapa
+.fd-stage .leaflet-top.leaflet-right {
+  top: calc(64px + var(--ion-safe-area-top, 0px));
+  right: 8px;
+}
+
 .fd-top {
   position: absolute;
   top: calc(14px + var(--ion-safe-area-top, 0px));

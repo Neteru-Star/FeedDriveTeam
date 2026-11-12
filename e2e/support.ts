@@ -213,6 +213,20 @@ const places: Record<string, object[]> = {
 export async function mockMapServices(page: Page): Promise<void> {
   await page.route('https://tile.openstreetmap.org/**', (route) => route.abort());
   await page.route('https://nominatim.openstreetmap.org/reverse**', (route) => route.fulfill({ json: reverseResult }));
+  await page.route('https://router.project-osrm.org/**', (route) => {
+    const match = /driving\/([-\d.]+),([-\d.]+);([-\d.]+),([-\d.]+)/.exec(route.request().url());
+    if (!match) return route.fulfill({ json: { code: 'InvalidUrl' } });
+    const [fromLng, fromLat, toLng, toLat] = match.slice(1).map(Number);
+    // Ruta en "L" por una esquina: como una calle real, no pasa por la línea directa.
+    const coordinates = [
+      [fromLng, fromLat],
+      [toLng, fromLat],
+      [toLng, toLat],
+    ];
+    return route.fulfill({
+      json: { code: 'Ok', routes: [{ distance: 1900, duration: 420, geometry: { type: 'LineString', coordinates } }] },
+    });
+  });
   await page.route('https://nominatim.openstreetmap.org/search**', (route) => {
     const query = new URL(route.request().url()).searchParams.get('q')?.toLowerCase() ?? '';
     const key = Object.keys(places).find((k) => query.includes(k));

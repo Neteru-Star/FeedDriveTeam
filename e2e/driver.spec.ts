@@ -97,10 +97,15 @@ test('hides a rejected request, stays online after reloading and goes offline', 
   await card(page, origin).getByRole('button', { name: 'Rechazar' }).click();
   await expect(card(page, origin)).toHaveCount(0);
 
+  // Otra solicitud que sí debe verse, para saber que la lista ya cargó tras recargar.
+  const other = await createClient(request);
+  const otherOrigin = uniqueOrigin();
+  await requestRideByApi(request, other.token, otherOrigin);
+
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Estás en línea' })).toBeVisible();
+  await expect(card(page, otherOrigin)).toBeVisible({ timeout: 10_000 });
   // El rechazo se recuerda en el teléfono.
-  await expect(page.getByRole('heading', { name: /^Solicitudes cercanas/ })).toBeVisible({ timeout: 10_000 });
   await expect(card(page, origin)).toHaveCount(0);
 
   const offline = page.waitForRequest((r) => r.url().endsWith('/driver/availability'));
