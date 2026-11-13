@@ -84,6 +84,7 @@ Con `npm run mock:api:auto`, Carlos se vuelve un conductor automático: acepta c
 
 ## Documentación
 
+- [Guía de sustentación (tecnologías, datos, persistencia, mapa)](docs/GUIA_SUSTENTACION.md)
 - [Arquitectura y cómo añadir una feature](docs/ARQUITECTURA.md)
 - [Guía de despliegue](docs/DESPLIEGUE.md)
 - [Brechas del backend y sus soluciones](docs/BRECHAS_BACKEND.md)
