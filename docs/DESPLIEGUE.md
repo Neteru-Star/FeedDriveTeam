@@ -11,6 +11,18 @@
 
 Si cambia la dirección del backend real, edita `src/environments/environment.prod.ts`.
 
+## Antes de usar el servidor del profesor
+
+Desde la red de la universidad (el servidor `20.20.2.171` solo es accesible ahí):
+
+```bash
+npm run check:real                                  # responde y CORS deja entrar a la web y al APK
+npm run check:real -- cliente@uber.com cliente123   # además revisa las rutas del rol de esa cuenta
+```
+
+Solo consulta: no crea ni modifica datos, y cierra la sesión de prueba que abre. Si todo sale ✅, `npm start` y el APK
+de `npm run apk` funcionan con ese servidor.
+
 ## Web
 
 ```bash
@@ -27,8 +39,8 @@ que la web debe servirse también por HTTP o el navegador bloqueará las peticio
 Requisitos: Android SDK y **JDK 21** (Gradle 8.14 no funciona con el JDK 25 de Android Studio).
 
 ```bash
-npm run apk -- real              # backend del profesor
-npm run apk                      # backend simulado en este computador (IP del Wi-Fi)
+npm run apk                      # backend del profesor
+npm run apk -- mock              # backend simulado en este computador (IP del Wi-Fi)
 npm run apk -- mock 192.168.1.20 # backend simulado en otra IP
 ```
 

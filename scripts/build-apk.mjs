@@ -2,9 +2,9 @@
 /**
  * Compila el APK de depuración apuntando a un backend.
  *
- *   npm run apk                      -> backend simulado en este computador (IP de la red local)
+ *   npm run apk                      -> backend del profesor (environment.prod.ts)
+ *   npm run apk -- mock              -> backend simulado en este computador (IP de la red local)
  *   npm run apk -- mock 192.168.1.20 -> backend simulado en esa IP
- *   npm run apk -- real              -> backend del profesor (environment.prod.ts)
  *
  * El APK queda en dist/FeedDrive-<destino>.apk. El celular debe estar en la misma red que el backend.
  */
@@ -13,7 +13,7 @@ import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
 import { networkInterfaces } from 'node:os';
 import { join } from 'node:path';
 
-const [target = 'mock', ipArg] = process.argv.slice(2);
+const [target = 'real', ipArg] = process.argv.slice(2);
 const MOCK_PORT = 8000;
 
 function lanIp() {
