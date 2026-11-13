@@ -40,17 +40,27 @@ test('follows the trip from the driver on the way to the final fare (HU-06)', as
 
   await reportLocation(request, driver.token, SOUTH_OF_PARQUE_93);
   const tripId = await acceptRequest(request, driver.token, client.token);
+  // Ruta del conductor hasta la recogida: desde su posición (4.665) hasta el Parque de la 93 (4.6766).
+  const approach = page.waitForRequest(
+    (r) => r.url().includes('router.project-osrm.org') && r.url().includes('-74.0483,4.665;-74.0483,4.6766'),
+  );
   await page.clock.runFor(POLL_MS);
+  await approach;
 
   // 1,3 km en línea recta × 1,3 de rodeo a 22 km/h ≈ 5 min.
   await expect(heading(page, 'Llega en ~5 min')).toBeVisible();
   await expect(currentStep(page)).toContainText('Conductor asignado');
   await expect(page.getByRole('link', { name: `Llamar a ${driver.name}` })).toHaveAttribute('href', /^tel:3\d{9}$/);
   await expect(page.locator('.fd-mk-driver')).toBeVisible();
+  await expect(page.locator('path.fd-route')).toHaveCount(1);
+
+  const approachPath = await page.locator('path.fd-route').getAttribute('d');
 
   await advanceTrip(request, driver.token, tripId, 'arrive');
   await page.clock.runFor(POLL_MS);
   await expect(heading(page, 'Tu conductor llegó')).toBeVisible();
+  // Al llegar el conductor, el mapa vuelve a la ruta del viaje (recogida → destino), ya calculada antes.
+  await expect(page.locator('path.fd-route')).not.toHaveAttribute('d', approachPath!);
   await expect(currentStep(page)).toContainText('Tu conductor llegó');
   await expect(page.getByRole('button', { name: 'Cancelar viaje' })).toBeVisible();
 

@@ -62,6 +62,11 @@ export interface ActiveTrip {
     latest_location: { latitude: number; longitude: number } | null;
   };
   vehicle: { plate: string; brand: string; model: string; color: string } | null;
+  /** No están en la documentación; si el backend los envía, sirven cuando no hay solicitud guardada en el teléfono. */
+  origin_latitude?: number;
+  origin_longitude?: number;
+  destination_latitude?: number;
+  destination_longitude?: number;
 }
 
 /** Respuesta de `GET /client/active` como unión discriminada. */

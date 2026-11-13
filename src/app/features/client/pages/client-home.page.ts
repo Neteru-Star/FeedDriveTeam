@@ -4,6 +4,7 @@ import {
   computed,
   effect,
   inject,
+  linkedSignal,
   signal,
   untracked,
   viewChild,
@@ -32,6 +33,7 @@ import { PlaceSearchComponent } from '../components/place-search.component';
 import { RateTripComponent } from '../components/rate-trip.component';
 import { RideStatusComponent } from '../components/ride-status.component';
 import { ActiveRideStore, CANCEL_REASON_MAX } from '../data-access/active-ride.store';
+import { nextApproachAnchor, type ApproachAnchor } from '../data-access/approach-route';
 import type { RideRequest, RideRequestPayload } from '../data-access/client.models';
 import { FareQuoteStore } from '../data-access/fare-quote.store';
 import { CURRENT_LOCATION, LOCATION_SEPARATOR, pickupName } from '../data-access/pickup-name';
@@ -160,10 +162,52 @@ export class ClientHomePage {
     return this.step() === 'confirm' ? 'Confirmar viaje' : 'Planear viaje';
   });
 
-  /** Ruta en el mapa: la de la solicitud en curso o la que se está planeando. */
-  protected readonly mapRoute = computed<MapRoute | null>(() => {
+  /** Origen y destino de la solicitud en curso. */
+  private readonly tripRoute = computed<MapRoute | null>(() => {
     const request = this.ride.request();
-    if (this.rideActive()) return request ? requestRoute(request) : null;
+    if (request) return requestRoute(request);
+    // Viaje abierto en otro dispositivo (sin solicitud guardada aquí): se usan sus coordenadas si el backend las envía.
+    const state = this.ride.state();
+    const trip = state.kind === 'trip' ? state.trip : null;
+    if (
+      trip?.origin_latitude === undefined ||
+      trip.origin_longitude === undefined ||
+      trip.destination_latitude === undefined ||
+      trip.destination_longitude === undefined
+    ) {
+      return null;
+    }
+    return {
+      from: { lat: trip.origin_latitude, lng: trip.origin_longitude },
+      to: { lat: trip.destination_latitude, lng: trip.destination_longitude },
+    };
+  });
+
+  /**
+   * Mientras el conductor va por el pasajero: desde dónde se dibuja su ruta hasta la recogida. Solo cambia cuando
+   * el conductor avanza lo suficiente (ver `nextApproachAnchor`), no en cada consulta del viaje.
+   */
+  private readonly approachAnchor = linkedSignal<{ tripId: number; driver: LatLng } | null, ApproachAnchor | null>({
+    source: () => {
+      const state = this.ride.state();
+      if (state.kind !== 'trip' || state.trip.status !== 'assigned') return null;
+      const location = state.trip.driver.latest_location;
+      return location ? { tripId: state.trip.id, driver: { lat: location.latitude, lng: location.longitude } } : null;
+    },
+    computation: (source, previous) =>
+      source ? nextApproachAnchor(previous?.value ?? null, source.tripId, source.driver) : null,
+  });
+
+  /**
+   * Ruta en el mapa: el camino del conductor hasta la recogida mientras viene, luego la del viaje;
+   * sin viaje, la que se está planeando.
+   */
+  protected readonly mapRoute = computed<MapRoute | null>(() => {
+    if (this.rideActive()) {
+      const trip = this.tripRoute();
+      const anchor = this.approachAnchor();
+      return anchor && trip ? { from: anchor.from, to: trip.from } : trip;
+    }
     return this.picking() ? null : this.draft.route();
   });
 
@@ -171,9 +215,10 @@ export class ClientHomePage {
     const markers: MapMarker[] = [];
     const me = this.location.position();
     if (me) markers.push({ id: 'me', kind: 'user', position: me, label: CURRENT_LOCATION });
-    const route = this.mapRoute();
     const state = this.ride.state();
     if (this.rideActive()) {
+      // Recogida y destino del viaje, aunque la ruta dibujada sea la del conductor hasta la recogida.
+      const route = this.tripRoute();
       if (route) {
         markers.push({ id: 'origin', kind: 'origin', position: route.from });
         markers.push({ id: 'destination', kind: 'destination', position: route.to });
