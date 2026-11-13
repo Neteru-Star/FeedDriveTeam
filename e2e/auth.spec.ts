@@ -61,9 +61,10 @@ test('closes the session cleanly when the token is no longer valid', async ({ pa
 
   // Simula un token invalidado en el servidor: la sesión guardada conserva un token que el backend ya no acepta.
   await page.evaluate(() => {
-    const key = 'CapacitorStorage.feeddrive.session';
-    const session = JSON.parse(localStorage.getItem(key)!);
-    localStorage.setItem(key, JSON.stringify({ ...session, token: 'token-invalido' }));
+    // En la web la sesión vive en sessionStorage (una por pestaña).
+    const key = 'feeddrive.session';
+    const session = JSON.parse(sessionStorage.getItem(key)!);
+    sessionStorage.setItem(key, JSON.stringify({ ...session, token: 'token-invalido' }));
   });
   await page.reload();
 

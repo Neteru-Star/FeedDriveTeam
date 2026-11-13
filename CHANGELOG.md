@@ -1,5 +1,13 @@
 # Changelog
 
+## Corrección: una sesión por pestaña
+
+- En la web la sesión se guardaba en `localStorage`, compartido por todas las pestañas: al iniciar sesión en una se reemplazaba la de la otra. Ahora vive en `sessionStorage`, propia de cada pestaña y conservada al recargar, así que se puede tener, por ejemplo, el pasajero en una pestaña y el conductor en otra. En el teléfono sigue en Capacitor Preferences.
+- Cerrar sesión en una pestaña no cierra las demás; una pestaña nueva empieza sin sesión.
+- La solicitud activa del pasajero se guarda por usuario: dos pasajeros en pestañas distintas no comparten su viaje.
+- Se borra la sesión compartida que dejaban las versiones anteriores.
+- Pruebas: almacenamiento de la sesión en la web y en el teléfono; E2E con dos pestañas del mismo navegador (pasajero y conductor, recargas y cierre de sesión en una).
+
 ## Corrección: rutas por las calles
 
 - La ruta del mapa seguía una curva directa entre origen y destino y atravesaba zonas imposibles de transitar. Ahora se calcula por las vías con OSRM (`RoutePlanner`, intercambiable como el geocodificador), con caché de las últimas rutas y límite de espera de 8 s.

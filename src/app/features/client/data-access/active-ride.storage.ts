@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
+import { AuthStore } from '@core/auth/auth.store';
 
 import type { RideRequest } from './client.models';
 
@@ -11,8 +12,15 @@ const KEY = 'feeddrive.activeRide';
  */
 @Injectable({ providedIn: 'root' })
 export class ActiveRideStorage {
+  private readonly auth = inject(AuthStore);
+
+  /** Una por pasajero: dos pasajeros en pestañas distintas del mismo navegador no comparten su viaje. */
+  private get key(): string {
+    return `${KEY}.${this.auth.user()?.id ?? 'anon'}`;
+  }
+
   async load(): Promise<RideRequest | null> {
-    const { value } = await Preferences.get({ key: KEY });
+    const { value } = await Preferences.get({ key: this.key });
     if (!value) return null;
     try {
       return JSON.parse(value) as RideRequest;
@@ -22,10 +30,10 @@ export class ActiveRideStorage {
   }
 
   save(request: RideRequest): Promise<void> {
-    return Preferences.set({ key: KEY, value: JSON.stringify(request) });
+    return Preferences.set({ key: this.key, value: JSON.stringify(request) });
   }
 
   clear(): Promise<void> {
-    return Preferences.remove({ key: KEY });
+    return Preferences.remove({ key: this.key });
   }
 }

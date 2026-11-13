@@ -29,7 +29,9 @@ Reglas:
   paso). Nunca se comparan estados sueltos en los templates.
 - **Los stores de cada rol se proveen en sus rutas**, no en `root`: al cerrar sesión se destruyen y otro usuario no
   hereda datos.
-- **Lo que el backend no permite consultar se guarda con Capacitor Preferences** (solicitud activa del pasajero,
+- **La sesión es una por pestaña en la web** (`sessionStorage`) y única en el teléfono (Capacitor Preferences):
+  se pueden abrir el pasajero y el conductor en dos pestañas del mismo navegador.
+- **Lo que el backend no permite consultar se guarda con Capacitor Preferences, por usuario** (solicitud activa del pasajero,
   viaje y rastro GPS del conductor, si estaba en línea, viajes calificados).
 - **Tiempo real por consulta periódica** (cada 5 s, en pausa con la app en segundo plano): RxJS `timer` +
   `exhaustMap` dentro de los stores.
