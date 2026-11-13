@@ -25,10 +25,20 @@ const ICON_HTML: Record<MapMarker['kind'], string> = {
   origin: '<span class="fd-mk-origin"></span>',
   destination: '<span class="fd-mk-destination"></span>',
   driver:
-    '<span class="fd-mk-driver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 18-7-4-7 4z"/></svg></span>',
+    '<span class="fd-mk-driver"><svg class="fd-car" viewBox="0 0 24 40" aria-hidden="true">' +
+    // Carro visto desde arriba, con el frente hacia el norte: gira con el rumbo del conductor.
+    '<rect class="mirror" x="0.6" y="12" width="3" height="3.4" rx="1.2"/>' +
+    '<rect class="mirror" x="20.4" y="12" width="3" height="3.4" rx="1.2"/>' +
+    '<rect class="body" x="2.5" y="1.5" width="19" height="37" rx="7"/>' +
+    '<path class="glass" d="M5.6 15.2C9.8 13.4 14.2 13.4 18.4 15.2L17.6 9.4C14 8 10 8 6.4 9.4Z"/>' +
+    '<rect class="roof" x="6.4" y="16" width="11.2" height="11" rx="2.4"/>' +
+    '<path class="glass" d="M6.2 28.2C10 29.6 14 29.6 17.8 28.2L17.2 32.6C13.8 33.8 10.2 33.8 6.8 32.6Z"/>' +
+    '<ellipse class="light" cx="6.6" cy="3.6" rx="2" ry="1.1"/>' +
+    '<ellipse class="light" cx="17.4" cy="3.6" rx="2" ry="1.1"/>' +
+    '</svg></span>',
 };
 
-const ICON_SIZE: Record<MapMarker['kind'], number> = { user: 22, origin: 18, destination: 18, driver: 34 };
+const ICON_SIZE: Record<MapMarker['kind'], number> = { user: 22, origin: 18, destination: 18, driver: 46 };
 
 /** Duración del deslizamiento del conductor entre dos posiciones reportadas. */
 export const GLIDE_MS = 1200;

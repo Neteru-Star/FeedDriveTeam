@@ -88,23 +88,45 @@
   border-color: var(--color-surface);
 }
 
-// Conductor: flecha que gira con su rumbo
+// Conductor: carrito visto desde arriba que gira con su rumbo y se desliza entre posiciones
 .fd-mk-driver {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--color-ink);
-  box-shadow:
-    0 0 0 6px color-mix(in srgb, var(--color-primary) 45%, transparent),
-    0 4px 10px rgba(0, 0, 0, 0.35);
+  width: 46px;
+  height: 46px;
 
-  svg {
-    width: 18px;
-    fill: var(--color-primary);
+  .fd-car {
+    width: 23px;
+    height: 38px;
     transform: rotate(var(--heading, 0deg));
     transition: transform var(--motion-base);
+    // Sombra que lo despega del mapa en modo claro y oscuro
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+  }
+
+  .body {
+    fill: var(--color-primary);
+    stroke: #0f1a14;
+    stroke-width: 1.4;
+  }
+
+  .roof {
+    fill: var(--color-primary-strong);
+  }
+
+  .glass,
+  .mirror {
+    fill: #0f1a14;
+  }
+
+  .light {
+    fill: #fffbe0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-mk-driver .fd-car {
+    transition: none;
   }
 }
 
